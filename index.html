@@ -409,6 +409,17 @@
             display: none;
             z-index: 2000;
         }
+
+        .role-tag {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .role-keeper { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .role-prof { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+        .role-member { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
     </style>
 </head>
 <body>
@@ -447,7 +458,7 @@
                     </div>
 
                     <p>
-                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и пароль.
+                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и желаемый пароль.
                     </p>
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -463,7 +474,7 @@
             <div class="skyrim-card">
                 <div class="section-header">
                     <h2>📖 Фолианты и Свитки Библиотеки</h2>
-                    <span id="access-status-indicator" style="font-size: 0.85rem; color: #10b981;">Статус: Доступ Разрешен</span>
+                    <span id="access-status-indicator" style="font-size: 0.85rem;">Статус: Доступ Разрешен</span>
                 </div>
 
                 <div class="filter-bar">
@@ -544,13 +555,15 @@
                     </form>
                 </div>
 
-                <!-- Admin Dashboard -->
+                <!-- Control Dashboard (For Professor & Keeper) -->
                 <div id="admin-dashboard" style="display: none;">
-                    <div style="margin-bottom: 1.5rem; background: rgba(197, 160, 89, 0.1); padding: 1rem; border: 1px solid var(--border-gold-dark);">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold);">🧙‍♂️ Панель Смотрителя Архива (Firebase)</h3>
+                    <div style="margin-bottom: 1.5rem; background: rgba(197, 160, 89, 0.1); padding: 1rem; border: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="dashboard-title">🧙‍♂️ Панель Управления</h3>
+                        <span id="user-role-badge"></span>
                     </div>
                     
-                    <div style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem;">
+                    <!-- Form: Add Book (Visible ONLY to Keeper / Смотритель) -->
+                    <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Добавить Новый Труд в Архив</h3>
                         <form id="add-book-form" onsubmit="handleAddBook(event)">
                             <div class="form-grid">
@@ -582,6 +595,7 @@
                         </form>
                     </div>
 
+                    <!-- Manage Requests (Visible to Professor & Keeper) -->
                     <div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
@@ -636,18 +650,36 @@
             const userLogoutBtn = document.getElementById('user-logout-btn');
             const authBlock = document.getElementById('auth-block');
             const adminDashboard = document.getElementById('admin-dashboard');
+            const addBookContainer = document.getElementById('add-book-container');
+            const roleBadge = document.getElementById('user-role-badge');
+            const accessStatus = document.getElementById('access-status-indicator');
 
             if (currentUser) {
                 navCatalogBtn.style.display = 'flex';
                 homeCatalogBtn.style.display = 'inline-flex';
-                navLoginBtn.innerText = currentUser.isAdmin ? '🧙‍♂️ Панель' : '👤 Профиль';
                 userLogoutBtn.style.display = 'inline-block';
                 authBlock.style.display = 'none';
 
-                if (currentUser.isAdmin) {
+                const role = currentUser.role || 'member';
+
+                if (role === 'keeper') {
+                    navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
+                    addBookContainer.style.display = 'block'; // Смотритель может добавлять книги
+                    roleBadge.className = 'role-tag role-keeper';
+                    roleBadge.innerText = 'Смотритель Арканеума';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
+                } else if (role === 'professor') {
+                    navLoginBtn.innerText = '📜 Панель';
+                    adminDashboard.style.display = 'block';
+                    addBookContainer.style.display = 'none'; // Профессор НЕ может добавлять книги
+                    roleBadge.className = 'role-tag role-prof';
+                    roleBadge.innerText = 'Профессор';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
                 } else {
+                    navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-member">Член Коллегии</span>';
                 }
             } else {
                 navCatalogBtn.style.display = 'none';
@@ -698,12 +730,12 @@
             const password = document.getElementById('login-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
-            // Хардкод администратора
+            // Хардкод главного Администратора (Смотритель Арканеума)
             if (charName.toLowerCase() === 'admin' && password === 'admin') {
-                currentUser = { name: 'Смотритель', isAdmin: true };
+                currentUser = { name: 'Ураг гро-Шуб', role: 'keeper' };
                 sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                 updateUIAuthState();
-                showToast('✨ Вход выполнен (Администратор)');
+                showToast('✨ Вход выполнен (Смотритель Арканеума)');
                 switchTab('catalog');
                 return;
             }
@@ -712,7 +744,7 @@
             db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const userData = snapshot.val();
                 if (userData && userData.password === password) {
-                    currentUser = { name: userData.name, isAdmin: false };
+                    currentUser = { name: userData.name, role: userData.role || 'member' };
                     sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                     updateUIAuthState();
                     showToast(`✨ Добро пожаловать, ${userData.name}!`);
@@ -749,12 +781,12 @@
 
             db.ref('requests/' + dbKey).set(reqData).then(() => {
                 document.getElementById('access-request-form').reset();
-                showToast('📜 Заявка успешно отправлена администратору!');
+                showToast('📜 Заявка успешно отправлена!');
                 switchTab('home');
             });
         }
 
-        // Слушатель заявок для Администратора
+        // Слушатель заявок для Профессоров и Смотрителя
         function listenFirebaseRequests() {
             db.ref('requests').on('value', snapshot => {
                 const tbody = document.getElementById('requests-tbody');
@@ -768,14 +800,17 @@
                 Object.keys(data).forEach(key => {
                     const r = data[key];
                     let badge = `<span class="status-badge status-pending">На рассмотрении</span>`;
-                    if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено</span>`;
+                    if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено (${r.assignedRole === 'professor' ? 'Профессор' : 'Член Коллегии'})</span>`;
                     if (r.status === 'rejected') badge = `<span class="status-badge status-rejected">Отклонено</span>`;
 
                     let btns = '-';
                     if (r.status === 'pending') {
                         btns = `
-                            <button class="btn-small btn-approve" onclick="approveUser('${key}')">Подтвердить</button>
-                            <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член Коллегии</button>
+                                <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser('${key}', 'professor')">+ Профессор</button>
+                                <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
+                            </div>
                         `;
                     }
 
@@ -792,19 +827,21 @@
             });
         }
 
-        // Подтверждение заявки
-        function approveUser(dbKey) {
+        // Подтверждение заявки с выбором роли
+        function approveUser(dbKey, roleToAssign) {
             db.ref('requests/' + dbKey).once('value').then(snapshot => {
                 const req = snapshot.val();
                 if (req) {
                     // Создаем пользователя в ветке users
                     db.ref('users/' + dbKey).set({
                         name: req.name,
-                        password: req.password
+                        password: req.password,
+                        role: roleToAssign
                     });
                     // Обновляем статус заявки
                     db.ref('requests/' + dbKey + '/status').set('approved');
-                    showToast(`✅ Заявка для ${req.name} одобрена!`);
+                    db.ref('requests/' + dbKey + '/assignedRole').set(roleToAssign);
+                    showToast(`✅ Заявка для ${req.name} одобрена (${roleToAssign === 'professor' ? 'Профессор' : 'Член Коллегии'})!`);
                 }
             });
         }
@@ -863,6 +900,13 @@
 
         function handleAddBook(e) {
             e.preventDefault();
+
+            // Проверка прав (только Смотритель)
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Смотритель Арканеума может добавлять книги!');
+                return;
+            }
+
             const fileInput = document.getElementById('book-file');
             const file = fileInput.files[0];
             const reader = new FileReader();
@@ -878,7 +922,7 @@
                 localStorage.setItem('skyrim_arcane_books', JSON.stringify(books));
                 document.getElementById('add-book-form').reset();
                 renderCatalog();
-                showToast('📚 Книга добавлена!');
+                showToast('📚 Книга добавлена в архив!');
             };
             reader.readAsDataURL(file);
         }
