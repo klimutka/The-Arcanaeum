@@ -306,6 +306,7 @@
         .btn-reject { background: #991b1b; color: #fff; }
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.5rem; width: 100%; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
+        .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
     </style>
 </head>
 <body>
@@ -495,12 +496,26 @@
 
                     <!-- Manage Users & Roles -->
                     <div id="manage-users-container" style="margin-top: 2.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">👥 Управление Доступами и Ролями</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <h3 style="font-family: var(--font-title); color: var(--text-gold);">👥 Управление Доступами и Ролями</h3>
+                            <input type="text" id="user-search-input" placeholder="🔍 Поиск по нику персонажа..." oninput="renderUsersTable()" style="max-width: 280px; padding: 0.5rem; font-size: 0.85rem;">
+                        </div>
                         <table class="requests-table">
                             <thead>
                                 <tr><th>Имя Персонажа</th><th>Текущая Роль</th><th>Изменить Роль</th><th>Действие</th></tr>
                             </thead>
                             <tbody id="users-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Deleted Users Section -->
+                    <div id="deleted-users-container" style="margin-top: 2.5rem;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">🗑️ Удаленные Пользователи</h3>
+                        <table class="requests-table">
+                            <thead>
+                                <tr><th>Имя Персонажа</th><th>Бывшая Роль</th><th>Действие</th></tr>
+                            </thead>
+                            <tbody id="deleted-users-tbody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -529,12 +544,15 @@
     <script>
         let books = [];
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
-        let allUsersKeys = [];
+        let allUsersData = {};
+        let allDeletedUsersData = {};
+        let allRequestsData = {};
 
         document.addEventListener('DOMContentLoaded', () => {
             updateUIAuthState();
             listenFirebaseBooks();
             listenFirebaseUsers();
+            listenFirebaseDeletedUsers();
             listenFirebaseRequests();
         });
 
@@ -662,8 +680,7 @@
             const password = document.getElementById('req-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
-            // Проверяем, есть ли пользователь уже в принятых (в users)
-            if (allUsersKeys.includes(dbKey)) {
+            if (allUsersData[dbKey]) {
                 showToast('⛔ Этот пользователь уже имеет доступ к библиотеке!');
                 return;
             }
@@ -686,136 +703,165 @@
 
         function listenFirebaseRequests() {
             db.ref('requests').on('value', snapshot => {
-                const tbody = document.getElementById('requests-tbody');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-                const data = snapshot.val();
-                if (!data) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет заявок</td></tr>';
-                    return;
-                }
+                allRequestsData = snapshot.val() || {};
+                renderRequestsTable();
+            });
+        }
 
-                let hasVisibleRequests = false;
+        function renderRequestsTable() {
+            const tbody = document.getElementById('requests-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
-                Object.keys(data).forEach(key => {
-                    const r = data[key];
-                    
-                    // Скрываем из заявок тех, кто уже есть в базе зарегистрированных пользователей (users)
-                    if (allUsersKeys.includes(key)) {
-                        return;
-                    }
+            const keys = Object.keys(allRequestsData);
+            const pendingKeys = keys.filter(key => {
+                const r = allRequestsData[key];
+                // Отображаем только те заявки, у которых статус именно pending и пользователь еще не в системе
+                return r.status === 'pending' && !allUsersData[key];
+            });
 
-                    hasVisibleRequests = true;
-                    let badge = `<span class="status-badge status-pending">На рассмотрении</span>`;
-                    if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено</span>`;
-                    if (r.status === 'rejected') badge = `<span class="status-badge status-rejected">Отклонено</span>`;
+            if (pendingKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет новых заявок</td></tr>';
+                return;
+            }
 
-                    let btns = '-';
-                    if (r.status === 'pending') {
-                        btns = `
+            pendingKeys.forEach(key => {
+                const r = allRequestsData[key];
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${r.name}</strong></td>
+                        <td style="font-size:0.85rem;">${r.reason}</td>
+                        <td><span class="status-badge status-pending">На рассмотрении</span></td>
+                        <td>
                             <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
                                 <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член</button>
                                 <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser('${key}', 'professor')">+ Профессор</button>
                                 <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
                             </div>
-                        `;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${r.name}</strong></td>
-                            <td style="font-size:0.85rem;">${r.reason}</td>
-                            <td>${badge}</td>
-                            <td>${btns}</td>
-                        </tr>
-                    `;
-                });
-
-                if (!hasVisibleRequests) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет заявок</td></tr>';
-                }
+                        </td>
+                    </tr>
+                `;
             });
         }
 
         function listenFirebaseUsers() {
             db.ref('users').on('value', snapshot => {
-                const tbody = document.getElementById('users-tbody');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-                const data = snapshot.val();
-                if (!data) {
-                    allUsersKeys = [];
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет пользователей</td></tr>';
-                    return;
+                allUsersData = snapshot.val() || {};
+                renderUsersTable();
+                renderRequestsTable(); // обновляем заявки при изменении пользователей
+            });
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const searchVal = document.getElementById('user-search-input') ? document.getElementById('user-search-input').value.toLowerCase() : '';
+            const userKeys = Object.keys(allUsersData);
+
+            const filteredKeys = userKeys.filter(key => {
+                const u = allUsersData[key];
+                return u.name.toLowerCase().includes(searchVal);
+            });
+
+            if (filteredKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Пользователи не найдены</td></tr>';
+                return;
+            }
+
+            const isCurrentProfessor = currentUser && currentUser.role === 'professor';
+
+            filteredKeys.forEach(key => {
+                const u = allUsersData[key];
+                const currentRole = u.role || 'member';
+                const isTargetKeeper = currentRole === 'keeper';
+                const isShaldir = key === 'шалдир';
+                const isSelf = currentUser && currentUser.key === key;
+
+                let actionHtml = '-';
+                let roleSelectHtml = '';
+
+                if (isShaldir) {
+                    roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
+                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                } else if (isCurrentProfessor && isTargetKeeper) {
+                    roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
+                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Защищено</span>`;
+                } else if (isCurrentProfessor && isSelf) {
+                    roleSelectHtml = `<span class="role-tag role-prof">Профессор (Вы)</span>`;
+                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Себя нельзя</span>`;
+                } else {
+                    actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+
+                    roleSelectHtml = `
+                        <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
+                            <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
+                            <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
+                            <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
+                        </select>
+                    `;
                 }
 
-                allUsersKeys = Object.keys(data);
-                const isCurrentProfessor = currentUser && currentUser.role === 'professor';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
+                        <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
+                        <td>${roleSelectHtml}</td>
+                        <td>${actionHtml}</td>
+                    </tr>
+                `;
+            });
+        }
 
-                allUsersKeys.forEach(key => {
-                    const u = data[key];
-                    const currentRole = u.role || 'member';
-                    const isTargetKeeper = currentRole === 'keeper';
-                    const isShaldir = key === 'шалдир';
-                    const isSelf = currentUser && currentUser.key === key;
+        function listenFirebaseDeletedUsers() {
+            db.ref('deleted_users').on('value', snapshot => {
+                allDeletedUsersData = snapshot.val() || {};
+                renderDeletedUsersTable();
+            });
+        }
 
-                    let actionHtml = '-';
-                    let roleSelectHtml = '';
+        function renderDeletedUsersTable() {
+            const tbody = document.getElementById('deleted-users-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
-                    // Шалдир неприкосновенен для смены роли и удаления
-                    if (isShaldir) {
-                        roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
-                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
-                    } else if (isCurrentProfessor && isTargetKeeper) {
-                        // Профессор не может трогать Смотрителей
-                        roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
-                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Защищено</span>`;
-                    } else if (isCurrentProfessor && isSelf) {
-                        // Профессор не может менять роль себе
-                        roleSelectHtml = `<span class="role-tag role-prof">Профессор (Вы)</span>`;
-                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Себя нельзя</span>`;
-                    } else {
-                        // Стандартные права на удаление и смену роли
-                        actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+            const keys = Object.keys(allDeletedUsersData);
+            if (keys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет удаленных пользователей</td></tr>';
+                return;
+            }
 
-                        roleSelectHtml = `
-                            <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
-                                <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
-                                <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
-                                <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
-                            </select>
-                        `;
-                    }
+            keys.forEach(key => {
+                const u = allDeletedUsersData[key];
+                const currentRole = u.role || 'member';
 
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
-                            <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
-                            <td>${roleSelectHtml}</td>
-                            <td>${actionHtml}</td>
-                        </tr>
-                    `;
-                });
-
-                // Перезапускаем обновление списка заявок, чтобы они корректно фильтровались
-                listenFirebaseRequests();
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${u.name}</strong></td>
+                        <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
+                        <td>
+                            <button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
         function changeUserRole(dbKey, newRole) {
             if (dbKey === 'шалдир') {
                 showToast('⛔ Аккаунт "Шалдир" защищен от изменения роли!');
-                listenFirebaseUsers();
+                renderUsersTable();
                 return;
             }
             if (currentUser && currentUser.role === 'professor' && currentUser.key === dbKey) {
                 showToast('⛔ Вы не можете менять роль самому себе!');
-                listenFirebaseUsers();
+                renderUsersTable();
                 return;
             }
             if (currentUser && currentUser.role === 'professor' && newRole === 'keeper') {
                 showToast('⛔ Профессор не может назначать роль Смотрителя!');
-                listenFirebaseUsers();
+                renderUsersTable();
                 return;
             }
 
@@ -830,36 +876,51 @@
                 return;
             }
             
-            db.ref('users/' + dbKey).once('value').then(snapshot => {
-                const targetUser = snapshot.val();
-                if (currentUser && currentUser.role === 'professor' && targetUser && targetUser.role === 'keeper') {
-                    showToast('⛔ Профессор не может удалять Смотрителей!');
-                    return;
-                }
+            const targetUser = allUsersData[dbKey];
+            if (currentUser && currentUser.role === 'professor' && targetUser && targetUser.role === 'keeper') {
+                showToast('⛔ Профессор не может удалять Смотрителей!');
+                return;
+            }
 
-                if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя из архива?')) {
+            if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
+                // Сохраняем в архив удаленных и удаляем из действующей базы
+                db.ref('deleted_users/' + dbKey).set(targetUser).then(() => {
                     db.ref('users/' + dbKey).remove().then(() => {
-                        showToast('🗑️ Пользователь удален из системы.');
-                    }).catch(err => {
-                        showToast('❌ Ошибка удаления: ' + err.message);
+                        showToast('🗑️ Пользователь перемещен в удаленные.');
                     });
-                }
-            });
+                }).catch(err => {
+                    showToast('❌ Ошибка: ' + err.message);
+                });
+            }
+        }
+
+        function restoreUser(dbKey) {
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Смотритель может восстанавливать пользователей!');
+                return;
+            }
+
+            const targetUser = allDeletedUsersData[dbKey];
+            if (targetUser) {
+                db.ref('users/' + dbKey).set(targetUser).then(() => {
+                    db.ref('deleted_users/' + dbKey).remove().then(() => {
+                        showToast(`✨ Пользователь ${targetUser.name} восстановлен!`);
+                    });
+                });
+            }
         }
 
         function approveUser(dbKey, roleToAssign) {
-            db.ref('requests/' + dbKey).once('value').then(snapshot => {
-                const req = snapshot.val();
-                if (req) {
-                    db.ref('users/' + dbKey).set({
-                        name: req.name,
-                        password: req.password,
-                        role: roleToAssign
-                    });
-                    db.ref('requests/' + dbKey + '/status').set('approved');
-                    showToast(`✅ Заявка для ${req.name} одобрена!`);
-                }
-            });
+            const req = allRequestsData[dbKey];
+            if (req) {
+                db.ref('users/' + dbKey).set({
+                    name: req.name,
+                    password: req.password,
+                    role: roleToAssign
+                });
+                db.ref('requests/' + dbKey + '/status').set('approved');
+                showToast(`✅ Заявка для ${req.name} одобрена!`);
+            }
         }
 
         function rejectUser(dbKey) {
@@ -1065,10 +1126,6 @@
                     saveBookToFirebase(bookId, newBook, uploadBtn);
                 });
             }
-        }
-
-        function saveBookType(bookId, bookData, uploadBtn) {
-            // Вспомогательная функция сохранения книги
         }
 
         function saveBookToFirebase(bookId, bookData, uploadBtn) {
