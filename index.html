@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=MedievalSharp&family=Marcellus&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Compat v9) -->
+    <!-- Firebase SDK (Compat v9) - Только Realtime Database (бесплатно!) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -433,7 +433,7 @@
                     
                     <!-- Form: Add Book (Keeper Only) -->
                     <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Добавить Новый Труд в Архив</h3>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Загрузить Книгу в Архив</h3>
                         <form id="add-book-form" onsubmit="handleAddBook(event)">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -460,7 +460,7 @@
                                     <textarea id="book-desc" rows="2" placeholder="Описание..."></textarea>
                                 </div>
                             </div>
-                            <button type="submit" class="btn-gold">Загрузить в Архив</button>
+                            <button type="submit" class="btn-gold" id="upload-btn">Добавить в Архив</button>
                         </form>
                     </div>
 
@@ -503,23 +503,12 @@
     <div id="toast" class="toast">Сообщение</div>
 
     <script>
-        const DEFAULT_BOOKS = [
-            {
-                id: 'book-1',
-                title: 'Тракт о продвинутом разрушении Искусство расщепления материи',
-                category: 'Разрушение',
-                fileType: 'pdf',
-                fileData: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 
-                description: 'Фундаментальный труд по высокоуровневым заклинаниям.'
-            }
-        ];
-
-        let books = JSON.parse(localStorage.getItem('skyrim_arcane_books')) || DEFAULT_BOOKS;
+        let books = [];
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
 
         document.addEventListener('DOMContentLoaded', () => {
             updateUIAuthState();
-            renderCatalog();
+            listenFirebaseBooks();
             listenFirebaseRequests();
             listenFirebaseUsers();
         });
@@ -759,6 +748,19 @@
             showToast('❌ Заявка отклонена.');
         }
 
+        // Синхронизация книг из базы данных в реальном времени
+        function listenFirebaseBooks() {
+            db.ref('books').on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    books = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                } else {
+                    books = [];
+                }
+                renderCatalog();
+            });
+        }
+
         function renderCatalog() {
             const container = document.getElementById('books-container');
             const searchVal = document.getElementById('search-input').value.toLowerCase();
@@ -806,6 +808,7 @@
             document.getElementById('modal-viewer-body').innerHTML = '';
         }
 
+        // Загрузка книги в общую базу данных (доступно только Смотрителям, бесплатно!)
         function handleAddBook(e) {
             e.preventDefault();
             if (!currentUser || currentUser.role !== 'keeper') {
@@ -815,20 +818,35 @@
 
             const fileInput = document.getElementById('book-file');
             const file = fileInput.files[0];
+            const title = document.getElementById('book-title').value;
+            const category = document.getElementById('book-category').value;
+            const description = document.getElementById('book-desc').value;
+
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.innerText = '⏳ Загрузка в архив...';
+            uploadBtn.disabled = true;
+
             const reader = new FileReader();
             reader.onload = function(evt) {
-                books.unshift({
-                    id: 'book-' + Date.now(),
-                    title: document.getElementById('book-title').value,
-                    category: document.getElementById('book-category').value,
+                const bookId = 'book-' + Date.now();
+                const newBook = {
+                    title: title,
+                    category: category,
                     fileType: file.type.includes('pdf') ? 'pdf' : 'image',
-                    fileData: evt.target.result,
-                    description: document.getElementById('book-desc').value
+                    fileData: evt.target.result, // Файл сохраняется прямо в базу данных
+                    description: description
+                };
+
+                db.ref('books/' + bookId).set(newBook).then(() => {
+                    document.getElementById('add-book-form').reset();
+                    showToast('📚 Книга успешно добавлена в архив!');
+                    uploadBtn.innerText = 'Добавить в Архив';
+                    uploadBtn.disabled = false;
+                }).catch(err => {
+                    showToast('❌ Ошибка: ' + err.message);
+                    uploadBtn.innerText = 'Добавить в Архив';
+                    uploadBtn.disabled = false;
                 });
-                localStorage.setItem('skyrim_arcane_books', JSON.stringify(books));
-                document.getElementById('add-book-form').reset();
-                renderCatalog();
-                showToast('📚 Книга добавлена в архив!');
             };
             reader.readAsDataURL(file);
         }
