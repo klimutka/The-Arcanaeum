@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <!-- PDF.js для идеального рендеринга PDF в браузере без черных экранов -->
+    <!-- PDF.js для рендеринга PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -272,8 +272,7 @@
         .viewer-header { background: #0a0c10; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center; }
         .viewer-body { flex: 1; background: #050608; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 1rem; position: relative; }
         
-        .pdf-canvas { margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: 100%; }
-        .viewer-body img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .pdf-canvas, .book-page-img { margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: 100%; object-fit: contain; }
 
         .lock-screen {
             text-align: center; padding: 3rem 1.5rem;
@@ -296,6 +295,7 @@
         .btn-small { padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
         .btn-approve { background: #166534; color: #fff; }
         .btn-reject { background: #991b1b; color: #fff; }
+        .btn-delete { background: #991b1b; color: #fff; margin-top: 0.5rem; width: 100%; }
     </style>
 </head>
 <body>
@@ -459,8 +459,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group full-width">
-                                    <label for="book-file">Файл (.pdf или картинка) *</label>
-                                    <input type="file" id="book-file" required>
+                                    <label for="book-file">Файл (.pdf или несколько JPEG/PNG картинок) *</label>
+                                    <input type="file" id="book-file" multiple accept=".pdf,image/jpeg,image/png" required>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">💡 Совет: Можно выбрать сразу несколько картинок страниц (JPEG/PNG), они объединятся в одну книгу.</span>
                                 </div>
                                 <div class="form-group full-width">
                                     <label for="book-desc">Описание</label>
@@ -785,20 +786,45 @@
             filtered.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'book-card';
+                
+                let deleteBtnHtml = '';
+                if (currentUser && currentUser.role === 'keeper') {
+                    deleteBtnHtml = `<button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>`;
+                }
+
                 card.innerHTML = `
                     <span class="book-type-badge">${book.fileType.toUpperCase()}</span>
                     <div>
                         <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.4rem;">${book.category}</div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.5rem;">${book.title}</h3>
                     </div>
-                    <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:1.5rem;">${book.description}</p>
-                    <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                    <div>
+                        <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:1rem;">${book.description}</p>
+                        <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                        ${deleteBtnHtml}
+                    </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // Рендеринг PDF через PDF.js
+        // Функция удаления книги для Смотрителей
+        function deleteBook(bookId, event) {
+            event.stopPropagation();
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Недостаточно прав!');
+                return;
+            }
+            if (confirm('Вы уверены, что хотите безвозвратно удалить этот труд из архива?')) {
+                db.ref('books/' + bookId).remove().then(() => {
+                    showToast('🗑️ Труд успешно удален из архива.');
+                }).catch(err => {
+                    showToast('❌ Ошибка удаления: ' + err.message);
+                });
+            }
+        }
+
+        // Рендеринг книги (PDF или несколько картинок)
         async function openViewer(id) {
             if (!currentUser) {
                 showToast('⛔ Авторизуйтесь!');
@@ -808,12 +834,11 @@
             const book = books.find(b => b.id === id);
             document.getElementById('modal-book-title').innerText = book.title;
             const body = document.getElementById('modal-viewer-body');
-            body.innerHTML = `<div style="color: var(--text-gold); margin-top: 2rem;" id="viewer-loader">⏳ Рендеринг страниц книги...</div>`;
+            body.innerHTML = `<div style="color: var(--text-gold); margin-top: 2rem;" id="viewer-loader">⏳ Загрузка страниц книги...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
 
             if (book.fileType === 'pdf') {
                 try {
-                    // Конвертируем Base64 обратно в бинарный массив данных для PDF.js
                     const binaryString = atob(book.fileData.split(',')[1]);
                     const len = binaryString.length;
                     const bytes = new Uint8Array(len);
@@ -824,7 +849,7 @@
                     const loadingTask = pdfjsLib.getDocument({ data: bytes });
                     const pdfDoc = await loadingTask.promise;
                     
-                    body.innerHTML = ''; // Очищаем лоадер
+                    body.innerHTML = '';
 
                     for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                         const page = await pdfDoc.getPage(pageNum);
@@ -847,18 +872,28 @@
                 } catch (err) {
                     body.innerHTML = `<div style="color: var(--danger); padding: 2rem;">❌ Ошибка чтения PDF: ${err.message}</div>`;
                 }
+            } else if (book.fileType === 'images' && Array.isArray(book.fileData)) {
+                // Если это массив картинок
+                body.innerHTML = '';
+                book.fileData.forEach((imgSrc, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.className = 'book-page-img';
+                    img.alt = `Страница ${index + 1}`;
+                    body.appendChild(img);
+                });
             } else {
-                // Если это картинка
-                body.innerHTML = `<img src="${book.fileData}" style="max-width:100%; object-fit:contain;">`;
+                // Одиночная картинка
+                body.innerHTML = `<img src="${book.fileData}" class="book-page-img">`;
             }
         }
 
         function closeViewer() {
             document.getElementById('viewer-modal').classList.remove('active');
-            document.getElementById('modal-viewer-body.innerHTML = '''; // исправление очистки
             document.getElementById('modal-viewer-body').innerHTML = '';
         }
 
+        // Загрузка книги (поддержка PDF или множества JPEG/PNG картинок)
         function handleAddBook(e) {
             e.preventDefault();
             if (!currentUser || currentUser.role !== 'keeper') {
@@ -867,38 +902,67 @@
             }
 
             const fileInput = document.getElementById('book-file');
-            const file = fileInput.files[0];
+            const files = fileInput.files;
+            if (files.length === 0) return;
+
             const title = document.getElementById('book-title').value;
             const category = document.getElementById('book-category').value;
             const description = document.getElementById('book-desc').value;
 
             const uploadBtn = document.getElementById('upload-btn');
-            uploadBtn.innerText = '⏳ Загрузка в архив...';
+            uploadBtn.innerText = '⏳ Обработка файлов...';
             uploadBtn.disabled = true;
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const bookId = 'book-' + Date.now();
-                const newBook = {
-                    title: title,
-                    category: category,
-                    fileType: file.type.includes('pdf') ? 'pdf' : 'image',
-                    fileData: evt.target.result,
-                    description: description
-                };
+            const bookId = 'book-' + Date.now();
 
-                db.ref('books/' + bookId).set(newBook).then(() => {
-                    document.getElementById('add-book-form').reset();
-                    showToast('📚 Книга успешно добавлена в архив!');
-                    uploadBtn.innerText = 'Добавить в Архив';
-                    uploadBtn.disabled = false;
-                }).catch(err => {
-                    showToast('❌ Ошибка: ' + err.message);
-                    uploadBtn.innerText = 'Добавить в Архив';
-                    uploadBtn.disabled = false;
+            // Если выбран один PDF файл
+            if (files.length === 1 && files[0].type.includes('pdf')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const newBook = {
+                        title: title,
+                        category: category,
+                        fileType: 'pdf',
+                        fileData: evt.target.result,
+                        description: description
+                    };
+                    saveBookToFirebase(bookId, newBook, uploadBtn);
+                };
+                reader.readAsDataURL(files[0]);
+            } else {
+                // Если выбрано несколько картинок (JPEG / PNG)
+                let imagePromises = Array.from(files).map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => resolve(evt.target.result);
+                        reader.readAsDataURL(file);
+                    });
                 });
-            };
-            reader.readAsDataURL(file);
+
+                Promise.all(imagePromises).then(base64Images => {
+                    const newBook = {
+                        title: title,
+                        category: category,
+                        fileType: 'images',
+                        fileData: base64Images, // Сохраняем массив страниц-картинок
+                        description: description
+                    };
+                    saveBookToFirebase(bookId, newBook, uploadBtn);
+                });
+            }
+        }
+
+        function saveBookToFirebase(bookId, bookData, uploadBtn) {
+            db.ref('books/' + bookId).set(bookData).then(() => {
+                document.getElementById('add-book-form').reset();
+                showToast('📚 Книга успешно добавлена в архив!');
+                uploadBtn.innerText = 'Добавить в Архив';
+                uploadBtn.disabled = false;
+            }).catch(err => {
+                showToast('❌ Ошибка: ' + err.message);
+                uploadBtn.innerText = 'Добавить в Архив';
+                uploadBtn.disabled = false;
+            });
         }
     </script>
 </body>
