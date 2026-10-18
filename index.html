@@ -268,7 +268,17 @@
             background: #12161f; border: 2px solid var(--border-gold);
             width: 100%; max-width: 1000px; height: 90vh;
             display: flex; flex-direction: column;
+            transition: all 0.3s ease;
         }
+        
+        /* Класс для полноэкранного режима */
+        .viewer-container.fullscreen {
+            max-width: 100vw !important;
+            height: 100vh !important;
+            border: none;
+            border-radius: 0;
+        }
+
         .viewer-header { background: #0a0c10; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center; }
         .viewer-body { flex: 1; background: #050608; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 1rem; position: relative; }
         
@@ -296,6 +306,7 @@
         .btn-approve { background: #166534; color: #fff; }
         .btn-reject { background: #991b1b; color: #fff; }
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.5rem; width: 100%; }
+        .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
     </style>
 </head>
 <body>
@@ -483,12 +494,12 @@
                         </table>
                     </div>
 
-                    <!-- Manage Users & Roles (Keeper Only) -->
-                    <div id="manage-users-container" style="margin-top: 2.5rem; display: none;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">👥 Управление Ролями Участников</h3>
+                    <!-- Manage Users & Roles (Keeper / Professor) -->
+                    <div id="manage-users-container" style="margin-top: 2.5rem;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">👥 Управление Доступами и Ролями</h3>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя Персонажа</th><th>Текущая Роль</th><th>Изменить Роль</th></tr>
+                                <tr><th>Имя Персонажа</th><th>Текущая Роль</th><th>Изменить Роль</th><th>Действие</th></tr>
                             </thead>
                             <tbody id="users-tbody"></tbody>
                         </table>
@@ -498,11 +509,15 @@
         </section>
     </main>
 
+    <!-- Modal Viewer -->
     <div class="modal-overlay" id="viewer-modal">
-        <div class="viewer-container">
+        <div class="viewer-container" id="viewer-container-box">
             <div class="viewer-header">
                 <div id="modal-book-title" style="color: var(--text-gold); font-family: var(--font-title);">Просмотр</div>
-                <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                <div style="display: flex; gap: 0.8rem; align-items: center;">
+                    <button class="btn-small" style="background: rgba(197, 160, 89, 0.2); color: var(--text-gold); border: 1px solid var(--border-gold);" onclick="toggleFullscreen()" id="fullscreen-btn" title="Развернуть на весь экран">🖎 На весь экран</button>
+                    <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
             </div>
             <div class="viewer-body" id="modal-viewer-body">
                 <div style="color: var(--text-muted); margin-top: 2rem;" id="viewer-loader">Загрузка страниц книги...</div>
@@ -533,15 +548,14 @@
             const authBlock = document.getElementById('auth-block');
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
-            const manageUsersContainer = document.getElementById('manage-users-container');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
 
             if (currentUser) {
                 navCatalogBtn.style.display = 'flex';
                 homeCatalogBtn.style.display = 'inline-flex';
-                homeRequestBtn.style.display = 'none'; // Скрываем кнопку запроса доступа для авторизованных
-                homeStatusText.style.display = 'none'; // Скрываем текст про закрытый архив
+                homeRequestBtn.style.display = 'none';
+                homeStatusText.style.display = 'none';
                 userLogoutBtn.style.display = 'inline-block';
                 authBlock.style.display = 'none';
 
@@ -551,7 +565,6 @@
                     navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
-                    manageUsersContainer.style.display = 'block';
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
@@ -559,7 +572,6 @@
                     navLoginBtn.innerText = '📜 Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'none';
-                    manageUsersContainer.style.display = 'none';
                     roleBadge.className = 'role-tag role-prof';
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
@@ -571,7 +583,7 @@
             } else {
                 navCatalogBtn.style.display = 'none';
                 homeCatalogBtn.style.display = 'none';
-                homeRequestBtn.style.display = 'inline-flex'; // Показываем для гостей
+                homeRequestBtn.style.display = 'inline-flex';
                 homeStatusText.style.display = 'block';
                 navLoginBtn.innerText = '🔑 Вход';
                 userLogoutBtn.style.display = 'none';
@@ -713,13 +725,20 @@
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет пользователей</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет пользователей</td></tr>';
                     return;
                 }
 
                 Object.keys(data).forEach(key => {
                     const u = data[key];
                     const currentRole = u.role || 'member';
+
+                    let actionHtml = '-';
+                    if (key !== 'шалдир') {
+                        actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                    } else {
+                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                    }
 
                     tbody.innerHTML += `
                         <tr>
@@ -732,6 +751,7 @@
                                     <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
                                 </select>
                             </td>
+                            <td>${actionHtml}</td>
                         </tr>
                     `;
                 });
@@ -742,6 +762,20 @@
             db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
                 showToast(`✨ Роль пользователя обновлена!`);
             });
+        }
+
+        function deleteUser(dbKey) {
+            if (dbKey === 'шалдир') {
+                showToast('⛔ Этот аккаунт защищен от удаления!');
+                return;
+            }
+            if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя из архива?')) {
+                db.ref('users/' + dbKey).remove().then(() => {
+                    showToast('🗑️ Пользователь удален из системы.');
+                }).catch(err => {
+                    showToast('❌ Ошибка удаления: ' + err.message);
+                });
+            }
         }
 
         function approveUser(dbKey, roleToAssign) {
@@ -890,7 +924,21 @@
             }
         }
 
+        // Переключение полноэкранного режима читалки
+        function toggleFullscreen() {
+            const container = document.getElementById('viewer-container-box');
+            const btn = document.getElementById('fullscreen-btn');
+            container.classList.toggle('fullscreen');
+            if (container.classList.contains('fullscreen')) {
+                btn.innerText = '🗗 Свернуть';
+            } else {
+                btn.innerText = '🖎 На весь экран';
+            }
+        }
+
         function closeViewer() {
+            document.getElementById('viewer-container-box').classList.remove('fullscreen');
+            document.getElementById('fullscreen-btn').innerText = '🖎 На весь экран';
             document.getElementById('viewer-modal').classList.remove('active');
             document.getElementById('modal-viewer-body').innerHTML = '';
         }
