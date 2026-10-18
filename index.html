@@ -297,7 +297,6 @@
             z-index: 10;
         }
 
-        /* 🔍 Панель зума и управления страницами */
         .zoom-controls {
             display: flex;
             align-items: center;
@@ -357,7 +356,7 @@
             min-height: 400px;
             background: rgba(20, 26, 38, 0.4);
             object-fit: contain; 
-            pointer-events: none; /* Защита от случайного выделения при перетаскивании */
+            pointer-events: none;
         }
 
         .lock-screen {
@@ -448,13 +447,14 @@
                     </div>
                     <div>
                         <select id="category-filter" onchange="renderCatalog()">
-                            <option value="all">Все школы магии</option>
+                            <option value="all">Все дисциплины</option>
                             <option value="Разрушение">Школа Разрушения</option>
                             <option value="Восстановление">Школа Восстановления</option>
                             <option value="Колдовство">Школа Колдовства</option>
                             <option value="Иллюзия">Школа Иллюзии</option>
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
+                            <option value="Алхимия">🧪 Алхимия</option>
                         </select>
                     </div>
                 </div>
@@ -541,7 +541,7 @@
                                     <input type="text" id="book-author" placeholder="Например: Маэль Телванни">
                                 </div>
                                 <div class="form-group">
-                                    <label for="book-category">Школа *</label>
+                                    <label for="book-category">Дисциплина / Школа *</label>
                                     <select id="book-category" required>
                                         <option value="Разрушение">Школа Разрушения</option>
                                         <option value="Восстановление">Школа Восстановления</option>
@@ -549,6 +549,7 @@
                                         <option value="Иллюзия">Школа Иллюзии</option>
                                         <option value="Изменение">Школа Изменения</option>
                                         <option value="Зачарование">Зачарование</option>
+                                        <option value="Алхимия">🧪 Алхимия</option>
                                     </select>
                                 </div>
                                 <div class="form-group full-width">
@@ -656,7 +657,7 @@
                         <input type="text" id="edit-book-author" placeholder="Имя автора...">
                     </div>
                     <div class="form-group">
-                        <label for="edit-book-category">Школа *</label>
+                        <label for="edit-book-category">Дисциплина / Школа *</label>
                         <select id="edit-book-category" required>
                             <option value="Разрушение">Школа Разрушения</option>
                             <option value="Восстановление">Школа Восстановления</option>
@@ -664,6 +665,7 @@
                             <option value="Иллюзия">Школа Иллюзии</option>
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
+                            <option value="Алхимия">🧪 Алхимия</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -694,7 +696,6 @@
         let allDeletedUsersData = {};
         let allRequestsData = {};
 
-        // Переменные зума и перетаскивания
         let currentZoom = 1;
         let isDragging = false;
         let startX, startY, scrollLeft, scrollTop;
@@ -708,7 +709,6 @@
             initViewerDragAndZoom();
         });
 
-        // Качественное сжатие для текстов
         function compressImage(file, maxWidth = 1500, maxHeight = 2000, quality = 0.7) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -742,7 +742,6 @@
             });
         }
 
-        // Логика зума и Drag & Drop перетаскивания страницы
         function initViewerDragAndZoom() {
             const body = document.getElementById('modal-viewer-body');
 
@@ -770,7 +769,6 @@
                 body.scrollTop = scrollTop - walkY;
             });
 
-            // Масштабирование колесиком мыши (с удерживанием Ctrl или обычным прокручиванием)
             body.addEventListener('wheel', (e) => {
                 if (e.ctrlKey) {
                     e.preventDefault();
@@ -1348,7 +1346,6 @@
             }
         }
 
-        // Оптимизированный ридер с поддержкой приближения и масштабирования
         async function openViewer(id) {
             if (!currentUser) {
                 showToast('⛔ Авторизуйтесь!');
