@@ -333,7 +333,7 @@
                         «Относитесь к этим книгам с уважением. Повредите хотя бы одну — и я лично прослежу, чтобы вас разнес на атомы разъяренный атронах.»
                     </div>
 
-                    <p>
+                    <p id="home-status-text">
                         Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и пароль.
                     </p>
                     
@@ -526,6 +526,8 @@
         function updateUIAuthState() {
             const navCatalogBtn = document.getElementById('nav-catalog-btn');
             const homeCatalogBtn = document.getElementById('home-catalog-btn');
+            const homeRequestBtn = document.getElementById('home-request-btn');
+            const homeStatusText = document.getElementById('home-status-text');
             const navLoginBtn = document.getElementById('nav-login-btn');
             const userLogoutBtn = document.getElementById('user-logout-btn');
             const authBlock = document.getElementById('auth-block');
@@ -538,6 +540,8 @@
             if (currentUser) {
                 navCatalogBtn.style.display = 'flex';
                 homeCatalogBtn.style.display = 'inline-flex';
+                homeRequestBtn.style.display = 'none'; // Скрываем кнопку запроса доступа для авторизованных
+                homeStatusText.style.display = 'none'; // Скрываем текст про закрытый архив
                 userLogoutBtn.style.display = 'inline-block';
                 authBlock.style.display = 'none';
 
@@ -567,6 +571,8 @@
             } else {
                 navCatalogBtn.style.display = 'none';
                 homeCatalogBtn.style.display = 'none';
+                homeRequestBtn.style.display = 'inline-flex'; // Показываем для гостей
+                homeStatusText.style.display = 'block';
                 navLoginBtn.innerText = '🔑 Вход';
                 userLogoutBtn.style.display = 'none';
                 authBlock.style.display = 'block';
@@ -808,7 +814,6 @@
             });
         }
 
-        // Функция удаления книги для Смотрителей
         function deleteBook(bookId, event) {
             event.stopPropagation();
             if (!currentUser || currentUser.role !== 'keeper') {
@@ -824,7 +829,6 @@
             }
         }
 
-        // Рендеринг книги (PDF или несколько картинок)
         async function openViewer(id) {
             if (!currentUser) {
                 showToast('⛔ Авторизуйтесь!');
@@ -873,7 +877,6 @@
                     body.innerHTML = `<div style="color: var(--danger); padding: 2rem;">❌ Ошибка чтения PDF: ${err.message}</div>`;
                 }
             } else if (book.fileType === 'images' && Array.isArray(book.fileData)) {
-                // Если это массив картинок
                 body.innerHTML = '';
                 book.fileData.forEach((imgSrc, index) => {
                     const img = document.createElement('img');
@@ -883,7 +886,6 @@
                     body.appendChild(img);
                 });
             } else {
-                // Одиночная картинка
                 body.innerHTML = `<img src="${book.fileData}" class="book-page-img">`;
             }
         }
@@ -893,7 +895,6 @@
             document.getElementById('modal-viewer-body').innerHTML = '';
         }
 
-        // Загрузка книги (поддержка PDF или множества JPEG/PNG картинок)
         function handleAddBook(e) {
             e.preventDefault();
             if (!currentUser || currentUser.role !== 'keeper') {
@@ -915,7 +916,6 @@
 
             const bookId = 'book-' + Date.now();
 
-            // Если выбран один PDF файл
             if (files.length === 1 && files[0].type.includes('pdf')) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
@@ -930,7 +930,6 @@
                 };
                 reader.readAsDataURL(files[0]);
             } else {
-                // Если выбрано несколько картинок (JPEG / PNG)
                 let imagePromises = Array.from(files).map(file => {
                     return new Promise((resolve) => {
                         const reader = new FileReader();
@@ -944,7 +943,7 @@
                         title: title,
                         category: category,
                         fileType: 'images',
-                        fileData: base64Images, // Сохраняем массив страниц-картинок
+                        fileData: base64Images,
                         description: description
                     };
                     saveBookToFirebase(bookId, newBook, uploadBtn);
