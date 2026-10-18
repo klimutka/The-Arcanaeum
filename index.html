@@ -244,6 +244,20 @@
             color: #93c5fd; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
         }
 
+        .advanced-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(197, 160, 89, 0.25) 0%, rgba(147, 51, 234, 0.25) 100%);
+            border: 1px solid var(--border-gold);
+            color: var(--text-gold);
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-bottom: 0.6rem;
+            font-family: var(--font-title);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
         .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
         .requests-table th, .requests-table td {
             padding: 0.8rem; text-align: left;
@@ -366,7 +380,7 @@
 
                 <div class="filter-bar">
                     <div style="flex: 1;">
-                        <input type="text" id="search-input" placeholder="Поиск по названию..." oninput="renderCatalog()" style="width: 100%;">
+                        <input type="text" id="search-input" placeholder="Поиск по названию или автору..." oninput="renderCatalog()" style="width: 100%;">
                     </div>
                     <div>
                         <select id="category-filter" onchange="renderCatalog()">
@@ -459,6 +473,10 @@
                                     <input type="text" id="book-title" required placeholder="Название трактата...">
                                 </div>
                                 <div class="form-group">
+                                    <label for="book-author">Автор Трактата</label>
+                                    <input type="text" id="book-author" placeholder="Например: Маэль Телванни">
+                                </div>
+                                <div class="form-group">
                                     <label for="book-category">Школа *</label>
                                     <select id="book-category" required>
                                         <option value="Разрушение">Школа Разрушения</option>
@@ -477,6 +495,10 @@
                                 <div class="form-group full-width">
                                     <label for="book-desc">Описание</label>
                                     <textarea id="book-desc" rows="2" placeholder="Описание..."></textarea>
+                                </div>
+                                <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 0.8rem;">
+                                    <input type="checkbox" id="book-is-advanced" style="width: 18px; height: 18px; cursor: pointer;">
+                                    <label for="book-is-advanced" style="cursor: pointer; font-size: 0.9rem; color: var(--text-gold);">Отметить как "Углубленные знания"</label>
                                 </div>
                             </div>
                             <button type="submit" class="btn-gold" id="upload-btn">Добавить в Архив</button>
@@ -716,7 +738,6 @@
             const keys = Object.keys(allRequestsData);
             const pendingKeys = keys.filter(key => {
                 const r = allRequestsData[key];
-                // Отображаем только те заявки, у которых статус именно pending и пользователь еще не в системе
                 return r.status === 'pending' && !allUsersData[key];
             });
 
@@ -748,7 +769,7 @@
             db.ref('users').on('value', snapshot => {
                 allUsersData = snapshot.val() || {};
                 renderUsersTable();
-                renderRequestsTable(); // обновляем заявки при изменении пользователей
+                renderRequestsTable();
             });
         }
 
@@ -883,7 +904,6 @@
             }
 
             if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
-                // Сохраняем в архив удаленных и удаляем из действующей базы
                 db.ref('deleted_users/' + dbKey).set(targetUser).then(() => {
                     db.ref('users/' + dbKey).remove().then(() => {
                         showToast('🗑️ Пользователь перемещен в удаленные.');
@@ -946,7 +966,12 @@
             const categoryVal = document.getElementById('category-filter').value;
             container.innerHTML = '';
 
-            const filtered = books.filter(b => b.title.toLowerCase().includes(searchVal) && (categoryVal === 'all' || b.category === categoryVal));
+            const filtered = books.filter(b => {
+                const titleMatch = b.title.toLowerCase().includes(searchVal);
+                const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
+                const categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
+                return (titleMatch || authorMatch) && categoryMatch;
+            });
             
             if (filtered.length === 0) {
                 container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: #888;">Ничего не найдено</div>`;
@@ -962,14 +987,19 @@
                     deleteBtnHtml = `<button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>`;
                 }
 
+                let advancedBadgeHtml = book.isAdvanced ? `<div class="advanced-badge">⭐ Углубленные знания</div>` : '';
+                let authorHtml = book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic; margin-bottom: 0.4rem;">Автор: ${book.author}</div>` : '';
+
                 card.innerHTML = `
                     <span class="book-type-badge">${book.fileType.toUpperCase()}</span>
                     <div>
-                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.4rem;">${book.category}</div>
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.5rem;">${book.title}</h3>
+                        ${advancedBadgeHtml}
+                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">${book.category}</div>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.3rem;">${book.title}</h3>
+                        ${authorHtml}
                     </div>
                     <div>
-                        <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:1rem;">${book.description}</p>
+                        <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:1rem; margin-top: 0.5rem;">${book.description}</p>
                         <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
                         ${deleteBtnHtml}
                     </div>
@@ -1000,7 +1030,7 @@
                 return;
             }
             const book = books.find(b => b.id === id);
-            document.getElementById('modal-book-title').innerText = book.title;
+            document.getElementById('modal-book-title').innerText = book.title + (book.author ? ` (${book.author})` : '');
             const body = document.getElementById('modal-viewer-body');
             body.innerHTML = `<div style="color: var(--text-gold); margin-top: 2rem;" id="viewer-loader">⏳ Загрузка страниц книги...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
@@ -1083,9 +1113,11 @@
             const files = fileInput.files;
             if (files.length === 0) return;
 
-            const title = document.getElementById('book-title').value;
+            const title = document.getElementById('book-title').value.trim();
+            const author = document.getElementById('book-author').value.trim();
             const category = document.getElementById('book-category').value;
-            const description = document.getElementById('book-desc').value;
+            const description = document.getElementById('book-desc').value.trim();
+            const isAdvanced = document.getElementById('book-is-advanced').checked;
 
             const uploadBtn = document.getElementById('upload-btn');
             uploadBtn.innerText = '⏳ Обработка файлов...';
@@ -1098,10 +1130,12 @@
                 reader.onload = function(evt) {
                     const newBook = {
                         title: title,
+                        author: author,
                         category: category,
                         fileType: 'pdf',
                         fileData: evt.target.result,
-                        description: description
+                        description: description,
+                        isAdvanced: isAdvanced
                     };
                     saveBookToFirebase(bookId, newBook, uploadBtn);
                 };
@@ -1118,10 +1152,12 @@
                 Promise.all(imagePromises).then(base64Images => {
                     const newBook = {
                         title: title,
+                        author: author,
                         category: category,
                         fileType: 'images',
                         fileData: base64Images,
-                        description: description
+                        description: description,
+                        isAdvanced: isAdvanced
                     };
                     saveBookToFirebase(bookId, newBook, uploadBtn);
                 });
