@@ -1202,6 +1202,10 @@
             const book = books.find(b => b.id === id);
             document.getElementById('modal-book-title').innerText = book.title + (book.author ? ` (${book.author})` : '');
             const body = document.getElementById('modal-viewer-body');
+            
+            // 💡 Сбрасываем скролл в самое начало при открытии новой книги
+            body.scrollTop = 0;
+
             body.innerHTML = `<div style="color: var(--text-gold); margin-top: 2rem;" id="viewer-loader">⏳ Загрузка страниц...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
 
@@ -1234,10 +1238,14 @@
         }
 
         function closeViewer() {
+            const body = document.getElementById('modal-viewer-body');
+            if (body) {
+                body.scrollTop = 0; // 💡 Сбрасываем позицию прокрутки при закрытии
+                body.innerHTML = '';
+            }
             document.getElementById('viewer-container-box').classList.remove('fullscreen');
             document.getElementById('fullscreen-btn').innerText = '🖎 На весь экран';
             document.getElementById('viewer-modal').classList.remove('active');
-            document.getElementById('modal-viewer-body').innerHTML = '';
         }
 
         async function handleAddBook(e) {
