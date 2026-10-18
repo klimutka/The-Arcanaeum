@@ -14,7 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // Конфигурация Firebase с твоими ключами
         const firebaseConfig = {
             apiKey: "AIzaSyACx9VYey9bQPraR8UytXS1EHyfdTWBlX4",
             authDomain: "the-arcanaeum-7d02b.firebaseapp.com",
@@ -26,9 +25,17 @@
             measurementId: "G-T2XLRJDV9D"
         };
 
-        // Инициализация Firebase Realtime Database
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // Функция хэширования паролей по алгоритму SHA-256
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
     </script>
 
     <style>
@@ -69,19 +76,10 @@
             overflow-x: hidden;
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #080a0d;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-gold-dark);
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #080a0d; }
+        ::-webkit-scrollbar-thumb { background: var(--border-gold-dark); border-radius: 4px; }
 
-        /* Header Frame */
         header {
             background: rgba(10, 12, 16, 0.95);
             border-bottom: 2px solid var(--border-gold-dark);
@@ -136,10 +134,7 @@
             letter-spacing: 1px;
         }
 
-        nav {
-            display: flex;
-            gap: 1rem;
-        }
+        nav { display: flex; gap: 1rem; }
 
         .nav-btn {
             background: rgba(20, 26, 38, 0.8);
@@ -172,9 +167,7 @@
             animation: fadeIn 0.4s ease-in-out forwards;
         }
 
-        .section-panel.active {
-            display: block;
-        }
+        .section-panel.active { display: block; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -236,9 +229,7 @@
             gap: 0.5rem;
         }
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
+        .form-group.full-width { grid-column: 1 / -1; }
 
         label {
             font-family: var(--font-title);
@@ -257,9 +248,7 @@
             outline: none;
         }
 
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--border-gold);
-        }
+        input:focus, select:focus, textarea:focus { border-color: var(--border-gold); }
 
         .btn-gold {
             background: linear-gradient(180deg, rgba(122, 92, 40, 0.8) 0%, rgba(60, 43, 15, 0.9) 100%);
@@ -567,14 +556,14 @@
                     </form>
                 </div>
 
-                <!-- Control Dashboard (For Professor & Keeper) -->
+                <!-- Control Dashboard -->
                 <div id="admin-dashboard" style="display: none;">
                     <div style="margin-bottom: 1.5rem; background: rgba(197, 160, 89, 0.1); padding: 1rem; border: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="dashboard-title">🧙‍♂️ Панель Управления</h3>
                         <span id="user-role-badge"></span>
                     </div>
                     
-                    <!-- Form: Add Book (Visible ONLY to Keeper / Смотритель) -->
+                    <!-- Form: Add Book -->
                     <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Добавить Новый Труд в Архив</h3>
                         <form id="add-book-form" onsubmit="handleAddBook(event)">
@@ -607,12 +596,12 @@
                         </form>
                     </div>
 
-                    <!-- Manage Requests (Visible to Professor & Keeper) -->
+                    <!-- Manage Requests -->
                     <div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя Персонажа</th><th>Пароль</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
+                                <tr><th>Имя Персонажа</th><th>Защищенный Хэш Пароля</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
                             </thead>
                             <tbody id="requests-tbody"></tbody>
                         </table>
@@ -735,14 +724,13 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // Вход по Имени Персонажа и Паролю через Firebase DB
-        function handleLoginSubmit(e) {
+        // Вход по Имени Персонажа и Хэшированному Паролю
+        async function handleLoginSubmit(e) {
             e.preventDefault();
             const charName = document.getElementById('login-charname').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
-            // Хардкод главного Администратора (Смотритель Арканеума)
             if (charName.toLowerCase() === 'admin' && password === 'admin') {
                 currentUser = { name: 'Ураг гро-Шуб', role: 'keeper' };
                 sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
@@ -752,10 +740,11 @@
                 return;
             }
 
-            // Проверка через Firebase Realtime Database
+            const passwordHash = await hashPassword(password);
+
             db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const userData = snapshot.val();
-                if (userData && userData.password === password) {
+                if (userData && userData.password === passwordHash) {
                     currentUser = { name: userData.name, role: userData.role || 'member' };
                     sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                     updateUIAuthState();
@@ -777,28 +766,29 @@
             switchTab('home');
         }
 
-        // Отправка заявки в Firebase
-        function handleRequestSubmit(e) {
+        // Отправка заявки с хэшированием пароля
+        async function handleRequestSubmit(e) {
             e.preventDefault();
             const charName = document.getElementById('req-name').value.trim();
             const password = document.getElementById('req-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
+            const passwordHash = await hashPassword(password);
+
             const reqData = {
                 name: charName,
-                password: password,
+                password: passwordHash, // Записывается только ХЭШ
                 reason: document.getElementById('req-reason').value,
                 status: 'pending'
             };
 
             db.ref('requests/' + dbKey).set(reqData).then(() => {
                 document.getElementById('access-request-form').reset();
-                showToast('📜 Заявка успешно отправлена!');
+                showToast('📜 Заявка отправлена (пароль защищен)!');
                 switchTab('home');
             });
         }
 
-        // Слушатель заявок для Профессоров и Смотрителя
         function listenFirebaseRequests() {
             db.ref('requests').on('value', snapshot => {
                 const tbody = document.getElementById('requests-tbody');
@@ -826,10 +816,13 @@
                         `;
                     }
 
+                    // Ограничиваем показ длинной строки хэша для компактности интерфейса
+                    const displayHash = r.password ? (r.password.substring(0, 10) + '...') : '🔒 [Хэш]';
+
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${r.name}</strong></td>
-                            <td><code>${r.password}</code></td>
+                            <td><code title="${r.password}">${displayHash}</code></td>
                             <td style="font-size:0.85rem;">${r.reason}</td>
                             <td>${badge}</td>
                             <td>${btns}</td>
@@ -839,19 +832,18 @@
             });
         }
 
-        // Подтверждение заявки с выбором роли
         function approveUser(dbKey, roleToAssign) {
             db.ref('requests/' + dbKey).once('value').then(snapshot => {
                 const req = snapshot.val();
                 if (req) {
                     db.ref('users/' + dbKey).set({
                         name: req.name,
-                        password: req.password,
+                        password: req.password, // Переносится уже хэшированный пароль
                         role: roleToAssign
                     });
                     db.ref('requests/' + dbKey + '/status').set('approved');
                     db.ref('requests/' + dbKey + '/assignedRole').set(roleToAssign);
-                    showToast(`✅ Заявка для ${req.name} одобрена (${roleToAssign === 'professor' ? 'Профессор' : 'Член Коллегии'})!`);
+                    showToast(`✅ Заявка для ${req.name} одобрена!`);
                 }
             });
         }
