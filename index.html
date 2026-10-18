@@ -28,7 +28,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Функция хэширования паролей по алгоритму SHA-256
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -48,19 +47,13 @@
             --text-light: #d1d5db;
             --text-muted: #8b92a0;
             --accent-arcane: #3b82f6;
-            --accent-purple: #8b5cf6;
             --danger: #ef4444;
             --success: #10b981;
             --font-title: 'Cinzel', serif;
-            --font-runic: 'MedievalSharp', cursive;
             --font-body: 'Marcellus', serif;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-dark);
@@ -99,25 +92,16 @@
             align-items: center;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            cursor: pointer;
-        }
+        .logo-area { display: flex; align-items: center; gap: 1rem; cursor: pointer; }
 
         .college-icon {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border: 2px solid var(--border-gold);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(10,12,16,1) 100%);
             box-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
-            font-size: 1.5rem;
-            color: var(--text-gold);
+            font-size: 1.5rem; color: var(--text-gold);
         }
 
         .logo-title h1 {
@@ -128,11 +112,7 @@
             text-transform: uppercase;
         }
 
-        .logo-title p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-        }
+        .logo-title p { font-size: 0.8rem; color: var(--text-muted); letter-spacing: 1px; }
 
         nav { display: flex; gap: 1rem; }
 
@@ -154,19 +134,9 @@
             border-color: var(--border-gold);
         }
 
-        main {
-            max-width: 1300px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            flex: 1;
-            width: 100%;
-        }
+        main { max-width: 1300px; margin: 2rem auto; padding: 0 1.5rem; flex: 1; width: 100%; }
 
-        .section-panel {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out forwards;
-        }
-
+        .section-panel { display: none; animation: fadeIn 0.4s ease-in-out forwards; }
         .section-panel.active { display: block; }
 
         @keyframes fadeIn {
@@ -193,59 +163,35 @@
             align-items: center;
         }
 
-        .section-header h2 {
-            font-family: var(--font-title);
-            color: var(--text-gold);
-            font-size: 1.6rem;
-        }
+        .section-header h2 { font-family: var(--font-title); color: var(--text-gold); font-size: 1.6rem; }
 
-        .home-description {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: var(--text-light);
-        }
+        .home-description { font-size: 1.1rem; line-height: 1.8; color: var(--text-light); }
 
         .home-quote {
             border-left: 3px solid var(--border-gold);
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: var(--text-gold);
+            padding-left: 1.5rem; margin: 2rem 0;
+            font-style: italic; color: var(--text-gold);
             background: rgba(197, 160, 89, 0.05);
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding-top: 1rem; padding-bottom: 1rem;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            gap: 1.5rem; margin-bottom: 1.5rem;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group.full-width { grid-column: 1 / -1; }
 
-        label {
-            font-family: var(--font-title);
-            font-size: 0.85rem;
-            color: var(--text-gold);
-        }
+        label { font-family: var(--font-title); font-size: 0.85rem; color: var(--text-gold); }
 
         input[type="text"], input[type="password"], select, textarea {
             background: rgba(10, 12, 16, 0.8);
             border: 1px solid var(--border-gold-dark);
-            color: #fff;
-            padding: 0.75rem;
-            font-family: var(--font-body);
-            font-size: 0.95rem;
-            border-radius: 2px;
-            outline: none;
+            color: #fff; padding: 0.75rem;
+            font-family: var(--font-body); font-size: 0.95rem;
+            border-radius: 2px; outline: none;
         }
 
         input:focus, select:focus, textarea:focus { border-color: var(--border-gold); }
@@ -255,26 +201,19 @@
             border: 1px solid var(--border-gold);
             color: var(--text-gold);
             padding: 0.8rem 1.8rem;
-            font-family: var(--font-title);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
+            font-family: var(--font-title); font-size: 0.9rem;
+            cursor: pointer; transition: all 0.3s ease; text-transform: uppercase;
         }
 
         .btn-gold:hover {
             background: linear-gradient(180deg, rgba(197, 160, 89, 0.9) 0%, rgba(122, 92, 40, 0.9) 100%);
-            color: #000;
-            font-weight: bold;
+            color: #000; font-weight: bold;
         }
 
         .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
+            display: flex; flex-wrap: wrap; gap: 1rem;
             background: rgba(10, 12, 16, 0.6);
-            padding: 1rem;
-            border: 1px solid rgba(197, 160, 89, 0.2);
+            padding: 1rem; border: 1px solid rgba(197, 160, 89, 0.2);
             margin-bottom: 2rem;
         }
 
@@ -287,138 +226,67 @@
         .book-card {
             background: rgba(15, 18, 26, 0.9);
             border: 1px solid var(--border-gold-dark);
-            border-radius: 4px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            border-radius: 4px; padding: 1.5rem;
+            display: flex; flex-direction: column; justify-content: space-between;
             position: relative;
         }
 
         .book-type-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
+            position: absolute; top: 10px; right: 10px;
             background: rgba(59, 130, 246, 0.2);
             border: 1px solid rgba(59, 130, 246, 0.4);
-            color: #93c5fd;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
+            color: #93c5fd; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
         }
 
-        .requests-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
+        .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
         .requests-table th, .requests-table td {
-            padding: 1rem;
-            text-align: left;
+            padding: 0.8rem; text-align: left;
             border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+            font-size: 0.9rem;
         }
+        .requests-table th { font-family: var(--font-title); color: var(--text-gold); background: rgba(10, 12, 16, 0.8); }
 
-        .requests-table th {
-            font-family: var(--font-title);
-            color: var(--text-gold);
-            background: rgba(10, 12, 16, 0.8);
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.6rem;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        }
-
+        .status-badge { padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.75rem; text-transform: uppercase; }
         .status-pending { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid #eab308; }
         .status-approved { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid #22c55e; }
         .status-rejected { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
 
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9); z-index: 1000;
+            display: none; justify-content: center; align-items: center; padding: 2rem;
         }
-
         .modal-overlay.active { display: flex; }
 
         .viewer-container {
-            background: #12161f;
-            border: 2px solid var(--border-gold);
-            width: 100%;
-            max-width: 1000px;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
+            background: #12161f; border: 2px solid var(--border-gold);
+            width: 100%; max-width: 1000px; height: 90vh;
+            display: flex; flex-direction: column;
         }
-
-        .viewer-header {
-            background: #0a0c10;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-gold-dark);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .viewer-body {
-            flex: 1;
-            background: #050608;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: auto;
-        }
-
+        .viewer-header { background: #0a0c10; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; }
+        .viewer-body { flex: 1; background: #050608; display: flex; justify-content: center; align-items: center; overflow: auto; }
         .viewer-body iframe { width: 100%; height: 100%; border: none; }
         .viewer-body img { max-width: 100%; max-height: 100%; }
 
         .lock-screen {
-            text-align: center;
-            padding: 3rem 1.5rem;
+            text-align: center; padding: 3rem 1.5rem;
             background: rgba(10, 12, 16, 0.8);
             border: 1px solid var(--border-gold-dark);
-            max-width: 450px;
-            margin: 0 auto;
+            max-width: 450px; margin: 0 auto;
         }
 
         .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-gold);
-            color: var(--text-gold);
-            padding: 1rem 1.5rem;
-            display: none;
-            z-index: 2000;
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--bg-card); border: 1px solid var(--border-gold);
+            color: var(--text-gold); padding: 1rem 1.5rem; display: none; z-index: 2000;
         }
 
-        .role-tag {
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
+        .role-tag { padding: 2px 8px; border-radius: 3px; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
         .role-keeper { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
         .role-prof { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
         .role-member { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
 
-        .btn-small {
-            padding: 0.3rem 0.6rem;
-            font-size: 0.75rem;
-            border-radius: 2px;
-            cursor: pointer;
-            border: none;
-            font-family: var(--font-title);
-        }
+        .btn-small { padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
         .btn-approve { background: #166534; color: #fff; }
         .btn-reject { background: #991b1b; color: #fff; }
     </style>
@@ -459,7 +327,7 @@
                     </div>
 
                     <p>
-                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и желаемый пароль.
+                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и пароль.
                     </p>
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -563,7 +431,7 @@
                         <span id="user-role-badge"></span>
                     </div>
                     
-                    <!-- Form: Add Book -->
+                    <!-- Form: Add Book (Keeper Only) -->
                     <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Добавить Новый Труд в Архив</h3>
                         <form id="add-book-form" onsubmit="handleAddBook(event)">
@@ -601,9 +469,20 @@
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя Персонажа</th><th>Защищенный Хэш Пароля</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
+                                <tr><th>Имя Персонажа</th><th>Хэш Пароля</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
                             </thead>
                             <tbody id="requests-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Manage Users & Roles (Keeper Only) -->
+                    <div id="manage-users-container" style="margin-top: 2.5rem; display: none;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">👥 Управление Ролями Участников</h3>
+                        <table class="requests-table">
+                            <thead>
+                                <tr><th>Имя Персонажа</th><th>Текущая Роль</th><th>Изменить Роль</th></tr>
+                            </thead>
+                            <tbody id="users-tbody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -642,6 +521,7 @@
             updateUIAuthState();
             renderCatalog();
             listenFirebaseRequests();
+            listenFirebaseUsers();
         });
 
         function updateUIAuthState() {
@@ -652,6 +532,7 @@
             const authBlock = document.getElementById('auth-block');
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
+            const manageUsersContainer = document.getElementById('manage-users-container');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
 
@@ -667,6 +548,7 @@
                     navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
+                    manageUsersContainer.style.display = 'block'; // Смотритель управляет ролями
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
@@ -674,6 +556,7 @@
                     navLoginBtn.innerText = '📜 Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'none';
+                    manageUsersContainer.style.display = 'none';
                     roleBadge.className = 'role-tag role-prof';
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
@@ -724,21 +607,12 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // Вход по Имени Персонажа и Хэшированному Паролю
+        // Авторизация через базу данных (без хардкода)
         async function handleLoginSubmit(e) {
             e.preventDefault();
             const charName = document.getElementById('login-charname').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
-
-            if (charName.toLowerCase() === 'admin' && password === 'admin') {
-                currentUser = { name: 'Ураг гро-Шуб', role: 'keeper' };
-                sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
-                updateUIAuthState();
-                showToast('✨ Вход выполнен (Смотритель Арканеума)');
-                switchTab('catalog');
-                return;
-            }
 
             const passwordHash = await hashPassword(password);
 
@@ -766,7 +640,6 @@
             switchTab('home');
         }
 
-        // Отправка заявки с хэшированием пароля
         async function handleRequestSubmit(e) {
             e.preventDefault();
             const charName = document.getElementById('req-name').value.trim();
@@ -777,14 +650,14 @@
 
             const reqData = {
                 name: charName,
-                password: passwordHash, // Записывается только ХЭШ
+                password: passwordHash,
                 reason: document.getElementById('req-reason').value,
                 status: 'pending'
             };
 
             db.ref('requests/' + dbKey).set(reqData).then(() => {
                 document.getElementById('access-request-form').reset();
-                showToast('📜 Заявка отправлена (пароль защищен)!');
+                showToast('📜 Заявка отправлена!');
                 switchTab('home');
             });
         }
@@ -792,6 +665,7 @@
         function listenFirebaseRequests() {
             db.ref('requests').on('value', snapshot => {
                 const tbody = document.getElementById('requests-tbody');
+                if (!tbody) return;
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
@@ -802,27 +676,24 @@
                 Object.keys(data).forEach(key => {
                     const r = data[key];
                     let badge = `<span class="status-badge status-pending">На рассмотрении</span>`;
-                    if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено (${r.assignedRole === 'professor' ? 'Профессор' : 'Член Коллегии'})</span>`;
+                    if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено</span>`;
                     if (r.status === 'rejected') badge = `<span class="status-badge status-rejected">Отклонено</span>`;
 
                     let btns = '-';
                     if (r.status === 'pending') {
                         btns = `
                             <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-                                <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член Коллегии</button>
+                                <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член</button>
                                 <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser('${key}', 'professor')">+ Профессор</button>
                                 <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
                             </div>
                         `;
                     }
 
-                    // Ограничиваем показ длинной строки хэша для компактности интерфейса
-                    const displayHash = r.password ? (r.password.substring(0, 10) + '...') : '🔒 [Хэш]';
-
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${r.name}</strong></td>
-                            <td><code title="${r.password}">${displayHash}</code></td>
+                            <td><code>${r.password.substring(0, 10)}...</code></td>
                             <td style="font-size:0.85rem;">${r.reason}</td>
                             <td>${badge}</td>
                             <td>${btns}</td>
@@ -832,17 +703,57 @@
             });
         }
 
+        // Слушатель списка пользователей для изменения ролей Смотрителем
+        function listenFirebaseUsers() {
+            db.ref('users').on('value', snapshot => {
+                const tbody = document.getElementById('users-tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const data = snapshot.val();
+                if (!data) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет пользователей</td></tr>';
+                    return;
+                }
+
+                Object.keys(data).forEach(key => {
+                    const u = data[key];
+                    // Не скрываем Шалдира из таблицы, чтобы можно было видеть его роль, но себя можно не менять
+                    const currentRole = u.role || 'member';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${u.name}</strong> ${key === 'шалдир' ? '👑' : ''}</td>
+                            <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
+                            <td>
+                                <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
+                                    <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
+                                    <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
+                                    <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // Функция изменения роли пользователя Смотрителем
+        function changeUserRole(dbKey, newRole) {
+            db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
+                showToast(`✨ Роль пользователя обновлена!`);
+            });
+        }
+
         function approveUser(dbKey, roleToAssign) {
             db.ref('requests/' + dbKey).once('value').then(snapshot => {
                 const req = snapshot.val();
                 if (req) {
                     db.ref('users/' + dbKey).set({
                         name: req.name,
-                        password: req.password, // Переносится уже хэшированный пароль
+                        password: req.password,
                         role: roleToAssign
                     });
                     db.ref('requests/' + dbKey + '/status').set('approved');
-                    db.ref('requests/' + dbKey + '/assignedRole').set(roleToAssign);
                     showToast(`✅ Заявка для ${req.name} одобрена!`);
                 }
             });
@@ -902,9 +813,8 @@
 
         function handleAddBook(e) {
             e.preventDefault();
-
             if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Смотритель Арканеума может добавлять книги!');
+                showToast('⛔ Недостаточно прав!');
                 return;
             }
 
