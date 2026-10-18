@@ -469,7 +469,7 @@
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя Персонажа</th><th>Хэш Пароля</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
+                                <tr><th>Имя Персонажа</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
                             </thead>
                             <tbody id="requests-tbody"></tbody>
                         </table>
@@ -548,7 +548,7 @@
                     navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
-                    manageUsersContainer.style.display = 'block'; // Смотритель управляет ролями
+                    manageUsersContainer.style.display = 'block';
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
@@ -607,7 +607,6 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // Авторизация через базу данных (без хардкода)
         async function handleLoginSubmit(e) {
             e.preventDefault();
             const charName = document.getElementById('login-charname').value.trim();
@@ -669,7 +668,7 @@
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Нет заявок</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет заявок</td></tr>';
                     return;
                 }
 
@@ -693,7 +692,6 @@
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${r.name}</strong></td>
-                            <td><code>${r.password.substring(0, 10)}...</code></td>
                             <td style="font-size:0.85rem;">${r.reason}</td>
                             <td>${badge}</td>
                             <td>${btns}</td>
@@ -703,7 +701,6 @@
             });
         }
 
-        // Слушатель списка пользователей для изменения ролей Смотрителем
         function listenFirebaseUsers() {
             db.ref('users').on('value', snapshot => {
                 const tbody = document.getElementById('users-tbody');
@@ -717,7 +714,6 @@
 
                 Object.keys(data).forEach(key => {
                     const u = data[key];
-                    // Не скрываем Шалдира из таблицы, чтобы можно было видеть его роль, но себя можно не менять
                     const currentRole = u.role || 'member';
 
                     tbody.innerHTML += `
@@ -737,7 +733,6 @@
             });
         }
 
-        // Функция изменения роли пользователя Смотрителем
         function changeUserRole(dbKey, newRole) {
             db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
                 showToast(`✨ Роль пользователя обновлена!`);
