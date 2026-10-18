@@ -271,7 +271,6 @@
             transition: all 0.3s ease;
         }
         
-        /* Класс для полноэкранного режима */
         .viewer-container.fullscreen {
             max-width: 100vw !important;
             height: 100vh !important;
@@ -494,7 +493,7 @@
                         </table>
                     </div>
 
-                    <!-- Manage Users & Roles (Keeper / Professor) -->
+                    <!-- Manage Users & Roles -->
                     <div id="manage-users-container" style="margin-top: 2.5rem;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">👥 Управление Доступами и Ролями</h3>
                         <table class="requests-table">
@@ -729,28 +728,42 @@
                     return;
                 }
 
+                const isCurrentProfessor = currentUser && currentUser.role === 'professor';
+
                 Object.keys(data).forEach(key => {
                     const u = data[key];
                     const currentRole = u.role || 'member';
+                    const isTargetKeeper = currentRole === 'keeper';
 
                     let actionHtml = '-';
-                    if (key !== 'шалдир') {
-                        actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                    let roleSelectHtml = '';
+
+                    // Если залогинен профессор и строка относится к Смотрителю — ограничиваем права
+                    if (isCurrentProfessor && isTargetKeeper) {
+                        roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
+                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Защищено</span>`;
                     } else {
-                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                        // Обычное управление для Смотрителей или для не-смотрителей
+                        if (key !== 'шалдир') {
+                            actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                        } else {
+                            actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                        }
+
+                        roleSelectHtml = `
+                            <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
+                                <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
+                                <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
+                                <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
+                            </select>
+                        `;
                     }
 
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${u.name}</strong> ${key === 'шалдир' ? '👑' : ''}</td>
                             <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
-                            <td>
-                                <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
-                                    <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
-                                    <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
-                                    <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
-                                </select>
-                            </td>
+                            <td>${roleSelectHtml}</td>
                             <td>${actionHtml}</td>
                         </tr>
                     `;
@@ -759,6 +772,12 @@
         }
 
         function changeUserRole(dbKey, newRole) {
+            // Защита: Профессор не может назначать или менять роль Смотрителя
+            if (currentUser && currentUser.role === 'professor' && newRole === 'keeper') {
+                showToast('⛔ Профессор не может назначать роль Смотрителя!');
+                renderCatalog(); // сброс селекта на экране
+                return;
+            }
             db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
                 showToast(`✨ Роль пользователя обновлена!`);
             });
@@ -769,13 +788,23 @@
                 showToast('⛔ Этот аккаунт защищен от удаления!');
                 return;
             }
-            if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя из архива?')) {
-                db.ref('users/' + dbKey).remove().then(() => {
-                    showToast('🗑️ Пользователь удален из системы.');
-                }).catch(err => {
-                    showToast('❌ Ошибка удаления: ' + err.message);
-                });
-            }
+            
+            // Дополнительная проверка на случай попытки удаления через консоль/скрипт
+            db.ref('users/' + dbKey).once('value').then(snapshot => {
+                const targetUser = snapshot.val();
+                if (currentUser && currentUser.role === 'professor' && targetUser && targetUser.role === 'keeper') {
+                    showToast('⛔ Профессор не может удалять Смотрителей!');
+                    return;
+                }
+
+                if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя из архива?')) {
+                    db.ref('users/' + dbKey).remove().then(() => {
+                        showToast('🗑️ Пользователь удален из системы.');
+                    }).catch(err => {
+                        showToast('❌ Ошибка удаления: ' + err.message);
+                    });
+                }
+            });
         }
 
         function approveUser(dbKey, roleToAssign) {
@@ -924,7 +953,6 @@
             }
         }
 
-        // Переключение полноэкранного режима читалки
         function toggleFullscreen() {
             const container = document.getElementById('viewer-container-box');
             const btn = document.getElementById('fullscreen-btn');
