@@ -231,13 +231,6 @@
             position: relative;
         }
 
-        .book-type-badge {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.4);
-            color: #93c5fd; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
-        }
-
         .advanced-badge {
             display: inline-block;
             background: linear-gradient(135deg, rgba(197, 160, 89, 0.25) 0%, rgba(147, 51, 234, 0.25) 100%);
@@ -1078,7 +1071,6 @@
                 let authorHtml = book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic; margin-bottom: 0.4rem;">Автор: ${book.author}</div>` : '';
 
                 card.innerHTML = `
-                    <span class="book-type-badge">СКАНЫ</span>
                     <div>
                         ${advancedBadgeHtml}
                         <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">${book.category}</div>
