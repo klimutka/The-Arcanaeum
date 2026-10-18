@@ -14,18 +14,19 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // ⚠️ ЗАМЕНИ ЭТИ ДАННЫЕ НА СВОИ ИЗ КОНСОЛИ FIREBASE
+        // Конфигурация Firebase с твоими ключами
         const firebaseConfig = {
-            apiKey: "ТВОЙ_API_KEY",
-            authDomain: "the-arcaneum-7d02b.firebaseapp.com",
-            databaseURL: "https://the-arcaneum-7d02b-default-rtdb.firebaseio.com",
-            projectId: "the-arcaneum-7d02b",
-            storageBucket: "the-arcaneum-7d02b.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyACx9VYey9bQPraR8UytXS1EHyfdTWBlX4",
+            authDomain: "the-arcanaeum-7d02b.firebaseapp.com",
+            databaseURL: "https://the-arcanaeum-7d02b-default-rtdb.firebaseio.com",
+            projectId: "the-arcanaeum-7d02b",
+            storageBucket: "the-arcanaeum-7d02b.firebasestorage.app",
+            messagingSenderId: "659890744500",
+            appId: "1:659890744500:web:cf5555c1b172f7236dfbe1",
+            measurementId: "G-T2XLRJDV9D"
         };
 
-        // Инициализация Firebase
+        // Инициализация Firebase Realtime Database
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
     </script>
@@ -420,6 +421,17 @@
         .role-keeper { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
         .role-prof { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
         .role-member { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+
+        .btn-small {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            border-radius: 2px;
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-title);
+        }
+        .btn-approve { background: #166534; color: #fff; }
+        .btn-reject { background: #991b1b; color: #fff; }
     </style>
 </head>
 <body>
@@ -665,14 +677,14 @@
                 if (role === 'keeper') {
                     navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
-                    addBookContainer.style.display = 'block'; // Смотритель может добавлять книги
+                    addBookContainer.style.display = 'block';
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
                 } else if (role === 'professor') {
                     navLoginBtn.innerText = '📜 Панель';
                     adminDashboard.style.display = 'block';
-                    addBookContainer.style.display = 'none'; // Профессор НЕ может добавлять книги
+                    addBookContainer.style.display = 'none';
                     roleBadge.className = 'role-tag role-prof';
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
@@ -832,13 +844,11 @@
             db.ref('requests/' + dbKey).once('value').then(snapshot => {
                 const req = snapshot.val();
                 if (req) {
-                    // Создаем пользователя в ветке users
                     db.ref('users/' + dbKey).set({
                         name: req.name,
                         password: req.password,
                         role: roleToAssign
                     });
-                    // Обновляем статус заявки
                     db.ref('requests/' + dbKey + '/status').set('approved');
                     db.ref('requests/' + dbKey + '/assignedRole').set(roleToAssign);
                     showToast(`✅ Заявка для ${req.name} одобрена (${roleToAssign === 'professor' ? 'Профессор' : 'Член Коллегии'})!`);
@@ -901,7 +911,6 @@
         function handleAddBook(e) {
             e.preventDefault();
 
-            // Проверка прав (только Смотритель)
             if (!currentUser || currentUser.role !== 'keeper') {
                 showToast('⛔ Только Смотритель Арканеума может добавлять книги!');
                 return;
