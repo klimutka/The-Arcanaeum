@@ -529,12 +529,13 @@
     <script>
         let books = [];
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
+        let allUsersKeys = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             updateUIAuthState();
             listenFirebaseBooks();
-            listenFirebaseRequests();
             listenFirebaseUsers();
+            listenFirebaseRequests();
         });
 
         function updateUIAuthState() {
@@ -634,7 +635,7 @@
             db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const userData = snapshot.val();
                 if (userData && userData.password === passwordHash) {
-                    currentUser = { name: userData.name, role: userData.role || 'member' };
+                    currentUser = { key: dbKey, name: userData.name, role: userData.role || 'member' };
                     sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                     updateUIAuthState();
                     showToast(`✨ Добро пожаловать, ${userData.name}!`);
@@ -660,6 +661,12 @@
             const charName = document.getElementById('req-name').value.trim();
             const password = document.getElementById('req-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
+
+            // Проверяем, есть ли пользователь уже в принятых (в users)
+            if (allUsersKeys.includes(dbKey)) {
+                showToast('⛔ Этот пользователь уже имеет доступ к библиотеке!');
+                return;
+            }
 
             const passwordHash = await hashPassword(password);
 
@@ -688,8 +695,17 @@
                     return;
                 }
 
+                let hasVisibleRequests = false;
+
                 Object.keys(data).forEach(key => {
                     const r = data[key];
+                    
+                    // Скрываем из заявок тех, кто уже есть в базе зарегистрированных пользователей (users)
+                    if (allUsersKeys.includes(key)) {
+                        return;
+                    }
+
+                    hasVisibleRequests = true;
                     let badge = `<span class="status-badge status-pending">На рассмотрении</span>`;
                     if (r.status === 'approved') badge = `<span class="status-badge status-approved">Одобрено</span>`;
                     if (r.status === 'rejected') badge = `<span class="status-badge status-rejected">Отклонено</span>`;
@@ -714,6 +730,10 @@
                         </tr>
                     `;
                 });
+
+                if (!hasVisibleRequests) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет заявок</td></tr>';
+                }
             });
         }
 
@@ -724,31 +744,39 @@
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
+                    allUsersKeys = [];
                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет пользователей</td></tr>';
                     return;
                 }
 
+                allUsersKeys = Object.keys(data);
                 const isCurrentProfessor = currentUser && currentUser.role === 'professor';
 
-                Object.keys(data).forEach(key => {
+                allUsersKeys.forEach(key => {
                     const u = data[key];
                     const currentRole = u.role || 'member';
                     const isTargetKeeper = currentRole === 'keeper';
+                    const isShaldir = key === 'шалдир';
+                    const isSelf = currentUser && currentUser.key === key;
 
                     let actionHtml = '-';
                     let roleSelectHtml = '';
 
-                    // Если залогинен профессор и строка относится к Смотрителю — ограничиваем права
-                    if (isCurrentProfessor && isTargetKeeper) {
+                    // Шалдир неприкосновенен для смены роли и удаления
+                    if (isShaldir) {
+                        roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
+                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                    } else if (isCurrentProfessor && isTargetKeeper) {
+                        // Профессор не может трогать Смотрителей
                         roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
                         actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Защищено</span>`;
+                    } else if (isCurrentProfessor && isSelf) {
+                        // Профессор не может менять роль себе
+                        roleSelectHtml = `<span class="role-tag role-prof">Профессор (Вы)</span>`;
+                        actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Себя нельзя</span>`;
                     } else {
-                        // Обычное управление для Смотрителей или для не-смотрителей
-                        if (key !== 'шалдир') {
-                            actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
-                        } else {
-                            actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
-                        }
+                        // Стандартные права на удаление и смену роли
+                        actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
 
                         roleSelectHtml = `
                             <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
@@ -761,23 +789,36 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${u.name}</strong> ${key === 'шалдир' ? '👑' : ''}</td>
+                            <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
                             <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
                             <td>${roleSelectHtml}</td>
                             <td>${actionHtml}</td>
                         </tr>
                     `;
                 });
+
+                // Перезапускаем обновление списка заявок, чтобы они корректно фильтровались
+                listenFirebaseRequests();
             });
         }
 
         function changeUserRole(dbKey, newRole) {
-            // Защита: Профессор не может назначать или менять роль Смотрителя
-            if (currentUser && currentUser.role === 'professor' && newRole === 'keeper') {
-                showToast('⛔ Профессор не может назначать роль Смотрителя!');
-                renderCatalog(); // сброс селекта на экране
+            if (dbKey === 'шалдир') {
+                showToast('⛔ Аккаунт "Шалдир" защищен от изменения роли!');
+                listenFirebaseUsers();
                 return;
             }
+            if (currentUser && currentUser.role === 'professor' && currentUser.key === dbKey) {
+                showToast('⛔ Вы не можете менять роль самому себе!');
+                listenFirebaseUsers();
+                return;
+            }
+            if (currentUser && currentUser.role === 'professor' && newRole === 'keeper') {
+                showToast('⛔ Профессор не может назначать роль Смотрителя!');
+                listenFirebaseUsers();
+                return;
+            }
+
             db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
                 showToast(`✨ Роль пользователя обновлена!`);
             });
@@ -789,7 +830,6 @@
                 return;
             }
             
-            // Дополнительная проверка на случай попытки удаления через консоль/скрипт
             db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const targetUser = snapshot.val();
                 if (currentUser && currentUser.role === 'professor' && targetUser && targetUser.role === 'keeper') {
@@ -1025,6 +1065,10 @@
                     saveBookToFirebase(bookId, newBook, uploadBtn);
                 });
             }
+        }
+
+        function saveBookType(bookId, bookData, uploadBtn) {
+            // Вспомогательная функция сохранения книги
         }
 
         function saveBookToFirebase(bookId, bookData, uploadBtn) {
