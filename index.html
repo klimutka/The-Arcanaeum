@@ -447,7 +447,7 @@
                     </div>
 
                     <p>
-                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав желаемый логин и пароль.
+                        Библиотека является <strong>закрытой</strong>. Отправьте запрос на доступ, указав имя персонажа и пароль.
                     </p>
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -494,22 +494,18 @@
                     <h2>✉️ Запрос на Выдачу Доступа</h2>
                 </div>
                 <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
-                    Укажите имя персонажа, а также желаемые <strong>Логин</strong> и <strong>Пароль</strong> для входа.
+                    Укажите <strong>Имя Персонажа</strong> и желаемый <strong>Пароль</strong> для входа в Библиотеку.
                 </p>
 
                 <form id="access-request-form" onsubmit="handleRequestSubmit(event)">
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="req-name">Имя Персонажа *</label>
-                            <input type="text" id="req-name" required placeholder="Фаренгар">
-                        </div>
-                        <div class="form-group">
-                            <label for="req-username">Желаемый Логин *</label>
-                            <input type="text" id="req-username" required placeholder="farengar">
+                            <input type="text" id="req-name" required placeholder="Например: Фаренгар">
                         </div>
                         <div class="form-group">
                             <label for="req-password">Желаемый Пароль *</label>
-                            <input type="password" id="req-password" required placeholder="пароль...">
+                            <input type="password" id="req-password" required placeholder="Пароль...">
                         </div>
                         <div class="form-group full-width">
                             <label for="req-reason">Цель получения доступа *</label>
@@ -536,8 +532,8 @@
                     <form id="login-form" onsubmit="handleLoginSubmit(event)">
                         <div style="display: flex; flex-direction: column; gap: 1rem; text-align: left; margin-bottom: 1.5rem;">
                             <div class="form-group">
-                                <label for="login-username">Логин *</label>
-                                <input type="text" id="login-username" required placeholder="Ваш логин...">
+                                <label for="login-charname">Имя Персонажа *</label>
+                                <input type="text" id="login-charname" required placeholder="Имя вашего персонажа...">
                             </div>
                             <div class="form-group">
                                 <label for="login-password">Пароль *</label>
@@ -590,7 +586,7 @@
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя</th><th>Логин</th><th>Пароль</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
+                                <tr><th>Имя Персонажа</th><th>Пароль</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
                             </thead>
                             <tbody id="requests-tbody"></tbody>
                         </table>
@@ -695,15 +691,16 @@
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
-        // Вход по Логину и Паролю через Firebase DB
+        // Вход по Имени Персонажа и Паролю через Firebase DB
         function handleLoginSubmit(e) {
             e.preventDefault();
-            const u = document.getElementById('login-username').value.trim();
-            const p = document.getElementById('login-password').value.trim();
+            const charName = document.getElementById('login-charname').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
             // Хардкод администратора
-            if (u === 'admin' && p === 'admin') {
-                currentUser = { username: 'admin', isAdmin: true, name: 'Смотритель' };
+            if (charName.toLowerCase() === 'admin' && password === 'admin') {
+                currentUser = { name: 'Смотритель', isAdmin: true };
                 sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                 updateUIAuthState();
                 showToast('✨ Вход выполнен (Администратор)');
@@ -712,16 +709,16 @@
             }
 
             // Проверка через Firebase Realtime Database
-            db.ref('users/' + u).once('value').then(snapshot => {
+            db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const userData = snapshot.val();
-                if (userData && userData.password === p) {
-                    currentUser = { username: u, isAdmin: false, name: userData.name };
+                if (userData && userData.password === password) {
+                    currentUser = { name: userData.name, isAdmin: false };
                     sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                     updateUIAuthState();
                     showToast(`✨ Добро пожаловать, ${userData.name}!`);
                     switchTab('catalog');
                 } else {
-                    showToast('❌ Неверный логин или пароль!');
+                    showToast('❌ Неверное имя персонажа или пароль!');
                 }
             }).catch(err => {
                 showToast('❌ Ошибка подключения к базе');
@@ -739,15 +736,18 @@
         // Отправка заявки в Firebase
         function handleRequestSubmit(e) {
             e.preventDefault();
+            const charName = document.getElementById('req-name').value.trim();
+            const password = document.getElementById('req-password').value.trim();
+            const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
+
             const reqData = {
-                name: document.getElementById('req-name').value,
-                username: document.getElementById('req-username').value.trim().toLowerCase(),
-                password: document.getElementById('req-password').value.trim(),
+                name: charName,
+                password: password,
                 reason: document.getElementById('req-reason').value,
                 status: 'pending'
             };
 
-            db.ref('requests/' + reqData.username).set(reqData).then(() => {
+            db.ref('requests/' + dbKey).set(reqData).then(() => {
                 document.getElementById('access-request-form').reset();
                 showToast('📜 Заявка успешно отправлена администратору!');
                 switchTab('home');
@@ -761,7 +761,7 @@
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if (!data) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Нет заявок</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Нет заявок</td></tr>';
                     return;
                 }
 
@@ -774,15 +774,14 @@
                     let btns = '-';
                     if (r.status === 'pending') {
                         btns = `
-                            <button class="btn-small btn-approve" onclick="approveUser('${r.username}')">Подтвердить</button>
-                            <button class="btn-small btn-reject" onclick="rejectUser('${r.username}')">Отклонить</button>
+                            <button class="btn-small btn-approve" onclick="approveUser('${key}')">Подтвердить</button>
+                            <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
                         `;
                     }
 
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${r.name}</strong></td>
-                            <td><code>${r.username}</code></td>
                             <td><code>${r.password}</code></td>
                             <td style="font-size:0.85rem;">${r.reason}</td>
                             <td>${badge}</td>
@@ -794,24 +793,24 @@
         }
 
         // Подтверждение заявки
-        function approveUser(username) {
-            db.ref('requests/' + username).once('value').then(snapshot => {
+        function approveUser(dbKey) {
+            db.ref('requests/' + dbKey).once('value').then(snapshot => {
                 const req = snapshot.val();
                 if (req) {
                     // Создаем пользователя в ветке users
-                    db.ref('users/' + username).set({
+                    db.ref('users/' + dbKey).set({
                         name: req.name,
                         password: req.password
                     });
                     // Обновляем статус заявки
-                    db.ref('requests/' + username + '/status').set('approved');
-                    showToast(`✅ Заявка для ${username} одобрена!`);
+                    db.ref('requests/' + dbKey + '/status').set('approved');
+                    showToast(`✅ Заявка для ${req.name} одобрена!`);
                 }
             });
         }
 
-        function rejectUser(username) {
-            db.ref('requests/' + username + '/status').set('rejected');
+        function rejectUser(dbKey) {
+            db.ref('requests/' + dbKey + '/status').set('rejected');
             showToast('❌ Заявка отклонена.');
         }
 
