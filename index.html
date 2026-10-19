@@ -669,7 +669,12 @@
 
                     <!-- Deleted Users Section -->
                     <div id="deleted-users-container" style="margin-top: 2.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">🗑️ Удаленные Пользователи</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <h3 style="font-family: var(--font-title); color: var(--text-gold);">🗑️ Удаленные Пользователи</h3>
+                            <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="deleted-user-search-input" placeholder="🔍 Поиск по нику..." oninput="renderDeletedUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
+                            </div>
+                        </div>
                         <table class="requests-table">
                             <thead>
                                 <tr><th>Имя Персонажа</th><th>Бывшая Роль</th><th>Действие</th></tr>
@@ -1375,7 +1380,14 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const keys = Object.keys(allDeletedUsersData);
+            const searchVal = document.getElementById('deleted-user-search-input') ? document.getElementById('deleted-user-search-input').value.toLowerCase() : '';
+            let keys = Object.keys(allDeletedUsersData);
+
+            keys = keys.filter(key => {
+                const u = allDeletedUsersData[key];
+                return u.name.toLowerCase().includes(searchVal);
+            });
+
             if (keys.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет удаленных пользователей</td></tr>';
                 return;
@@ -1385,10 +1397,24 @@
                 const u = allDeletedUsersData[key];
                 const currentRole = u.role || 'member';
 
+                let badgeClass = 'role-member';
+                let roleLabel = 'Член Коллегии';
+
+                if (currentRole === 'keeper') { 
+                    badgeClass = 'role-keeper'; 
+                    roleLabel = 'Смотритель'; 
+                } else if (currentRole === 'professor') { 
+                    badgeClass = 'role-prof'; 
+                    roleLabel = 'Профессор'; 
+                } else if (currentRole === 'guest') { 
+                    badgeClass = 'role-guest'; 
+                    roleLabel = 'Гость'; 
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong></td>
-                        <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
+                        <td><span class="role-tag ${badgeClass}">${roleLabel}</span></td>
                         <td>
                             <button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button>
                         </td>
