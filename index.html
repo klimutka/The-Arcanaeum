@@ -1071,23 +1071,17 @@
             const email = dbKey + "@arcanaeum.local";
 
             try {
-                // Пытаемся войти в системный модуль Firebase Auth
                 try {
                     await auth.signInWithEmailAndPassword(email, passwordHash);
                 } catch (signInErr) {
-                    // Если пользователя еще нет в системном Firebase Auth, регистрируем его автоматически
                     const snapshot = await db.ref('users/' + dbKey).once('value');
                     const userData = snapshot.val();
                     if (userData && userData.password === passwordHash) {
                         try {
                             const cred = await auth.createUserWithEmailAndPassword(email, passwordHash);
-                            const newUid = cred.user.uid;
-
-                            await db.ref('users/' + dbKey + '/uid').set(newUid);
-                            if (userData.role === 'keeper') await db.ref('keepers/' + newUid).set(true);
-                            if (userData.role === 'professor') await db.ref('professors/' + newUid).set(true);
+                            await db.ref('users/' + dbKey + '/uid').set(cred.user.uid);
                         } catch (createErr) {
-                            console.error("Ошибка авто-регистрации Firebase Auth:", createErr);
+                            console.error("Auth create error:", createErr);
                         }
                     } else {
                         throw new Error('Неверные данные');
@@ -1420,20 +1414,7 @@
                 return;
             }
 
-            const targetUser = allUsersData[dbKey];
-            const oldRole = targetUser ? targetUser.role : 'member';
-            const uid = targetUser ? targetUser.uid : null;
-
             await db.ref('users/' + dbKey + '/role').set(newRole);
-
-            if (uid) {
-                if (oldRole === 'keeper') await db.ref('keepers/' + uid).remove();
-                if (oldRole === 'professor') await db.ref('professors/' + uid).remove();
-
-                if (newRole === 'keeper') await db.ref('keepers/' + uid).set(true);
-                if (newRole === 'professor') await db.ref('professors/' + uid).set(true);
-            }
-
             showToast(`✨ Роль пользователя обновлена!`);
         }
 
@@ -1450,11 +1431,6 @@
             }
 
             if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
-                if (targetUser && targetUser.uid) {
-                    if (targetUser.role === 'keeper') await db.ref('keepers/' + targetUser.uid).remove();
-                    if (targetUser.role === 'professor') await db.ref('professors/' + targetUser.uid).remove();
-                }
-
                 db.ref('deleted_users/' + dbKey).set(targetUser).then(() => {
                     db.ref('users/' + dbKey).remove().then(() => {
                         showToast('🗑️ Пользователь перемещен в удаленные.');
@@ -1474,10 +1450,6 @@
             const targetUser = allDeletedUsersData[dbKey];
             if (targetUser) {
                 await db.ref('users/' + dbKey).set(targetUser);
-                if (targetUser.uid) {
-                    if (targetUser.role === 'keeper') await db.ref('keepers/' + targetUser.uid).set(true);
-                    if (targetUser.role === 'professor') await db.ref('professors/' + targetUser.uid).set(true);
-                }
                 await db.ref('deleted_users/' + dbKey).remove();
                 showToast(`✨ Пользователь ${targetUser.name} восстановлен!`);
             }
