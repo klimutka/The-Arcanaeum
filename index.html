@@ -245,6 +245,17 @@
             text-transform: uppercase;
         }
 
+        .sub-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            border: 1px solid var(--border-gold-dark);
+            color: var(--text-light);
+            background: rgba(0,0,0,0.4);
+        }
+
         .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
         .requests-table th, .requests-table td {
             padding: 0.8rem; text-align: left;
@@ -385,6 +396,16 @@
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; width: 100%; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
         .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
+
+        .guest-perm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.8rem;
+            background: rgba(10, 12, 16, 0.6);
+            padding: 1rem;
+            border: 1px solid var(--border-gold-dark);
+            margin-top: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -423,7 +444,7 @@
                     </div>
 
                     <p id="home-status-text">
-                        Архив магии является закрытым. Однако <strong>«Общественные писания»</strong> открыты для всех гостей без авторизации!
+                        Разрешенные Смотрителем категории трудов открыты для всех гостей!
                     </p>
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -443,13 +464,13 @@
                 </div>
 
                 <div class="filter-bar">
-                    <div style="flex: 1;">
+                    <div style="flex: 1; min-width: 220px;">
                         <input type="text" id="search-input" placeholder="Поиск по названию или автору..." oninput="renderCatalog()" style="width: 100%;">
                     </div>
                     <div>
-                        <select id="category-filter" onchange="renderCatalog()">
-                            <option value="all">Все дисциплины</option>
-                            <option value="Общественные писания">📜 Общественные писания (Публичные)</option>
+                        <select id="category-filter" onchange="onCategoryFilterChange()">
+                            <option value="all">Все категории</option>
+                            <option value="Общественные писания">📜 Общественные писания</option>
                             <option value="Разрушение">Школа Разрушения</option>
                             <option value="Восстановление">Школа Восстановления</option>
                             <option value="Колдовство">Школа Колдовства</option>
@@ -457,6 +478,18 @@
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
+                            <!-- Доступны только Профессорам и Смотрителям -->
+                            <option value="Исследования" class="prof-keeper-only" style="display:none;">🔬 Исследования (Закрыто)</option>
+                            <option value="Дневники/Доклады" class="prof-keeper-only" style="display:none;">📓 Дневники / Доклады (Закрыто)</option>
+                        </select>
+                    </div>
+
+                    <!-- Доп. подфильтр для Общественных писаний -->
+                    <div id="public-subfilter-box" style="display: none;">
+                        <select id="public-subfilter" onchange="renderCatalog()">
+                            <option value="all">Все публичные труды</option>
+                            <option value="teso">📜 Книги из TESO</option>
+                            <option value="players">✍️ Книги, написанные игроками</option>
                         </select>
                     </div>
                 </div>
@@ -528,6 +561,17 @@
                         <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="dashboard-title">🧙‍♂️ Панель Управления</h3>
                         <span id="user-role-badge"></span>
                     </div>
+
+                    <!-- Смотритель: Настройки доступов для ролей Гостей -->
+                    <div id="guest-permissions-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">⚙️ Настройки доступа для роли "Гость"</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Отметьте категории трудов, которые будут открыты для всех неавторизованных гостей:</p>
+                        
+                        <div class="guest-perm-grid" id="guest-perm-checkboxes">
+                            <!-- Заполняется динамически JS -->
+                        </div>
+                        <button class="btn-gold" onclick="saveGuestPermissions()" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.8rem;">Сохранить настройки доступов</button>
+                    </div>
                     
                     <!-- Form: Add Book (Keeper Only) -->
                     <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
@@ -543,9 +587,9 @@
                                     <input type="text" id="book-author" placeholder="Например: Маэль Телванни">
                                 </div>
                                 <div class="form-group">
-                                    <label for="book-category">Дисциплина / Категория *</label>
-                                    <select id="book-category" required>
-                                        <option value="Общественные писания">📜 Общественные писания (Публичная)</option>
+                                    <label for="book-category">Категория *</label>
+                                    <select id="book-category" required onchange="toggleAddBookSubtype()">
+                                        <option value="Общественные писания">📜 Общественные писания</option>
                                         <option value="Разрушение">Школа Разрушения</option>
                                         <option value="Восстановление">Школа Восстановления</option>
                                         <option value="Колдовство">Школа Колдовства</option>
@@ -553,8 +597,19 @@
                                         <option value="Изменение">Школа Изменения</option>
                                         <option value="Зачарование">Зачарование</option>
                                         <option value="Алхимия">🧪 Алхимия</option>
+                                        <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
+                                        <option value="Дневники/Доклады">📓 Дневники / Доклады (Только Профессоры/Смотритель)</option>
                                     </select>
                                 </div>
+
+                                <div class="form-group" id="add-book-public-tag-box">
+                                    <label for="book-public-tag">Тип общественного писания</label>
+                                    <select id="book-public-tag">
+                                        <option value="teso">📜 Книга из TESO</option>
+                                        <option value="players">✍️ Книга, написанная игроками</option>
+                                    </select>
+                                </div>
+
                                 <div class="form-group full-width">
                                     <label for="book-file">Страницы книги (много файлов, поддерживается 50+ страниц) *</label>
                                     <input type="file" id="book-file" multiple accept="image/jpeg,image/png" required>
@@ -660,9 +715,9 @@
                         <input type="text" id="edit-book-author" placeholder="Имя автора...">
                     </div>
                     <div class="form-group">
-                        <label for="edit-book-category">Дисциплина / Категория *</label>
-                        <select id="edit-book-category" required>
-                            <option value="Общественные писания">📜 Общественные писания (Публичная)</option>
+                        <label for="edit-book-category">Категория *</label>
+                        <select id="edit-book-category" required onchange="toggleEditBookSubtype()">
+                            <option value="Общественные писания">📜 Общественные писания</option>
                             <option value="Разрушение">Школа Разрушения</option>
                             <option value="Восстановление">Школа Восстановления</option>
                             <option value="Колдовство">Школа Колдовства</option>
@@ -670,6 +725,15 @@
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
+                            <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
+                            <option value="Дневники/Доклады">📓 Дневники / Доклады (Только Профессоры/Смотритель)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-book-public-tag-box">
+                        <label for="edit-book-public-tag">Тип общественного писания</label>
+                        <select id="edit-book-public-tag">
+                            <option value="teso">📜 Книга из TESO</option>
+                            <option value="players">✍️ Книга, написанная игроками</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -700,11 +764,30 @@
         let allDeletedUsersData = {};
         let allRequestsData = {};
 
+        // Разрешенные категории для роли Гостя по умолчанию
+        let guestPermissions = {
+            "Общественные писания": true
+        };
+
+        const ALL_CATEGORIES = [
+            "Общественные писания",
+            "Разрушение",
+            "Восстановление",
+            "Колдовство",
+            "Иллюзия",
+            "Изменение",
+            "Зачарование",
+            "Алхимия",
+            "Исследования",
+            "Дневники/Доклады"
+        ];
+
         let currentZoom = 1;
         let isDragging = false;
         let startX, startY, scrollLeft, scrollTop;
 
         document.addEventListener('DOMContentLoaded', () => {
+            listenGuestPermissions();
             updateUIAuthState();
             listenFirebaseBooks();
             listenFirebaseUsers();
@@ -712,6 +795,50 @@
             listenFirebaseRequests();
             initViewerDragAndZoom();
         });
+
+        function listenGuestPermissions() {
+            db.ref('guest_permissions').on('value', snapshot => {
+                const val = snapshot.val();
+                if (val) {
+                    guestPermissions = val;
+                }
+                renderGuestPermissionCheckboxes();
+                renderCatalog();
+            });
+        }
+
+        function renderGuestPermissionCheckboxes() {
+            const container = document.getElementById('guest-perm-checkboxes');
+            if (!container) return;
+            container.innerHTML = '';
+
+            ALL_CATEGORIES.forEach(cat => {
+                const isChecked = !!guestPermissions[cat];
+                container.innerHTML += `
+                    <label style="display:flex; align-items:center; gap: 0.5rem; cursor:pointer; color: var(--text-light); font-size:0.85rem;">
+                        <input type="checkbox" class="guest-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
+                        ${cat}
+                    </label>
+                `;
+            });
+        }
+
+        function saveGuestPermissions() {
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Смотритель может менять настройки!');
+                return;
+            }
+
+            let newPerms = {};
+            document.querySelectorAll('.guest-perm-check').forEach(chk => {
+                const cat = chk.getAttribute('data-category');
+                newPerms[cat] = chk.checked;
+            });
+
+            db.ref('guest_permissions').set(newPerms).then(() => {
+                showToast('✨ Настройки доступов для Гостей сохранены!');
+            });
+        }
 
         function compressImage(file, maxWidth = 1500, maxHeight = 2000, quality = 0.7) {
             return new Promise((resolve) => {
@@ -814,14 +941,14 @@
             const authBlock = document.getElementById('auth-block');
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
+            const guestPermContainer = document.getElementById('guest-permissions-container');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
-            const categoryFilterSelect = document.getElementById('category-filter');
+            const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
 
             if (currentUser) {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'none';
                 if (homeStatusText) homeStatusText.style.display = 'none';
-                if (categoryFilterSelect) categoryFilterSelect.style.display = 'block';
                 userLogoutBtn.style.display = 'inline-block';
                 authBlock.style.display = 'none';
 
@@ -831,30 +958,43 @@
                     navLoginBtn.innerText = '🧙‍♂️ Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
+                    guestPermContainer.style.display = 'block';
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
+                    profKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'professor') {
                     navLoginBtn.innerText = '📜 Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'none';
+                    guestPermContainer.style.display = 'none';
                     roleBadge.className = 'role-tag role-prof';
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
+                    profKeeperOptions.forEach(opt => opt.style.display = 'block');
+                } else if (role === 'guest') {
+                    navLoginBtn.innerText = '👤 Профиль';
+                    adminDashboard.style.display = 'none';
+                    guestPermContainer.style.display = 'none';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Авторизованный Гость</span>';
+                    profKeeperOptions.forEach(opt => opt.style.display = 'none');
                 } else {
                     navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
+                    guestPermContainer.style.display = 'none';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-member">Член Коллегии</span>';
+                    profKeeperOptions.forEach(opt => opt.style.display = 'none');
                 }
             } else {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'inline-flex';
                 if (homeStatusText) homeStatusText.style.display = 'block';
-                if (categoryFilterSelect) categoryFilterSelect.style.display = 'none';
                 navLoginBtn.innerText = '🔑 Вход';
                 userLogoutBtn.style.display = 'none';
                 authBlock.style.display = 'block';
                 adminDashboard.style.display = 'none';
-                accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Гость (Публичный доступ)</span>';
+                guestPermContainer.style.display = 'none';
+                accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Гость</span>';
+                profKeeperOptions.forEach(opt => opt.style.display = 'none');
             }
         }
 
@@ -976,6 +1116,7 @@
                         <td><span class="status-badge status-pending">На рассмотрении</span></td>
                         <td>
                             <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <button class="btn-small btn-approve" style="background:#4b5563;" onclick="approveUser('${key}', 'guest')">+ Гость</button>
                                 <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член</button>
                                 <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser('${key}', 'professor')">+ Профессор</button>
                                 <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
@@ -1038,6 +1179,7 @@
 
                     roleSelectHtml = `
                         <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
+                            <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Гость</option>
                             <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
                             <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
                             <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
@@ -1045,10 +1187,17 @@
                     `;
                 }
 
+                let badgeClass = 'role-member';
+                let roleLabel = 'Член Коллегии';
+
+                if (currentRole === 'keeper') { badgeClass = 'role-keeper'; roleLabel = 'Смотритель'; }
+                else if (currentRole === 'professor') { badgeClass = 'role-prof'; roleLabel = 'Профессор'; }
+                else if (currentRole === 'guest') { badgeClass = 'role-guest'; roleLabel = 'Гость'; }
+
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
-                        <td><span class="role-tag ${currentRole === 'keeper' ? 'role-keeper' : (currentRole === 'professor' ? 'role-prof' : 'role-member')}">${currentRole === 'keeper' ? 'Смотритель' : (currentRole === 'professor' ? 'Профессор' : 'Член Коллегии')}</span></td>
+                        <td><span class="role-tag ${badgeClass}">${roleLabel}</span></td>
                         <td>${roleSelectHtml}</td>
                         <td>${actionHtml}</td>
                     </tr>
@@ -1178,6 +1327,7 @@
                         title: data[key].title,
                         author: data[key].author,
                         category: data[key].category,
+                        publicTag: data[key].publicTag || 'teso',
                         description: data[key].description,
                         isAdvanced: data[key].isAdvanced
                     }));
@@ -1188,30 +1338,57 @@
             });
         }
 
+        function onCategoryFilterChange() {
+            const categoryVal = document.getElementById('category-filter').value;
+            const publicBox = document.getElementById('public-subfilter-box');
+            
+            if (categoryVal === 'Общественные писания') {
+                publicBox.style.display = 'block';
+            } else {
+                publicBox.style.display = 'none';
+            }
+            renderCatalog();
+        }
+
         function renderCatalog() {
             const container = document.getElementById('books-container');
             const searchVal = document.getElementById('search-input').value.toLowerCase();
             const categoryVal = document.getElementById('category-filter').value;
+            const publicSubfilter = document.getElementById('public-subfilter').value;
             container.innerHTML = '';
+
+            const userRole = currentUser ? currentUser.role : 'guest';
 
             const filtered = books.filter(b => {
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                // 🔒 Для неавторизованных пользователей — СТРОГО только "Общественные писания"
-                let categoryMatch = false;
-                if (!currentUser) {
-                    categoryMatch = (b.category === 'Общественные писания');
-                } else {
-                    categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
+                // 1. Проверка эксклюзивных категорий Профессоров и Смотрителя
+                if ((b.category === 'Исследования' || b.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                    return false;
+                }
+
+                // 2. Проверка ограничений для Роли "Гость"
+                if (userRole === 'guest' && !guestPermissions[b.category]) {
+                    return false;
+                }
+
+                // 3. Совпадение по категории из фильтра
+                let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
+
+                // 4. Доп. подфильтр для «Общественных писаний»
+                if (categoryMatch && categoryVal === 'Общественные писания' && publicSubfilter !== 'all') {
+                    if (b.publicTag !== publicSubfilter) {
+                        return false;
+                    }
                 }
 
                 return (titleMatch || authorMatch) && categoryMatch;
             });
             
             if (filtered.length === 0) {
-                const noBooksMsg = !currentUser 
-                    ? 'Нет доступных общественных писаний. Войдите в аккаунт, чтобы открыть закрытый архив.' 
+                const noBooksMsg = userRole === 'guest' 
+                    ? 'Нет доступных трудов. Войдите в аккаунт с более высоким уровнем доступа.' 
                     : 'Ничего не найдено';
 
                 container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted); font-size: 0.95rem;">${noBooksMsg}</div>`;
@@ -1233,13 +1410,22 @@
                 let advancedBadgeHtml = book.isAdvanced ? `<div class="advanced-badge">⭐ Углубленные знания</div>` : '';
                 let authorHtml = book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic; margin-bottom: 0.4rem;">Автор: ${book.author}</div>` : '';
                 
-                // Бейдж категории
-                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : 'color: var(--accent-arcane);';
+                // Тег подкатегории
+                let subTagHtml = '';
+                if (book.category === 'Общественные писания') {
+                    if (book.publicTag === 'players') {
+                        subTagHtml = `<span class="sub-tag">✍️ Игроки</span>`;
+                    } else {
+                        subTagHtml = `<span class="sub-tag">📜 TESO</span>`;
+                    }
+                }
+
+                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Дневники/Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
 
                 card.innerHTML = `
                     <div>
                         ${advancedBadgeHtml}
-                        <div style="font-size: 0.8rem; ${categoryColor} margin-bottom: 0.2rem;">${book.category}</div>
+                        <div style="font-size: 0.8rem; ${categoryColor} margin-bottom: 0.2rem;">${book.category} ${subTagHtml}</div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.3rem;">${book.title}</h3>
                         ${authorHtml}
                     </div>
@@ -1251,6 +1437,18 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function toggleAddBookSubtype() {
+            const cat = document.getElementById('book-category').value;
+            const tagBox = document.getElementById('add-book-public-tag-box');
+            tagBox.style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
+        }
+
+        function toggleEditBookSubtype() {
+            const cat = document.getElementById('edit-book-category').value;
+            const tagBox = document.getElementById('edit-book-public-tag-box');
+            tagBox.style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
         }
 
         async function openEditBookModal(bookId, event) {
@@ -1268,10 +1466,12 @@
             document.getElementById('edit-book-title').value = book.title || '';
             document.getElementById('edit-book-author').value = book.author || '';
             document.getElementById('edit-book-category').value = book.category || 'Общественные писания';
+            document.getElementById('edit-book-public-tag').value = book.publicTag || 'teso';
             document.getElementById('edit-book-desc').value = book.description || '';
             document.getElementById('edit-book-is-advanced').checked = !!book.isAdvanced;
             document.getElementById('edit-book-append-file').value = '';
 
+            toggleEditBookSubtype();
             document.getElementById('edit-book-modal').classList.add('active');
         }
 
@@ -1294,6 +1494,7 @@
             const title = document.getElementById('edit-book-title').value.trim();
             const author = document.getElementById('edit-book-author').value.trim();
             const category = document.getElementById('edit-book-category').value;
+            const publicTag = document.getElementById('edit-book-public-tag').value;
             const description = document.getElementById('edit-book-desc').value.trim();
             const isAdvanced = document.getElementById('edit-book-is-advanced').checked;
             const appendFileInput = document.getElementById('edit-book-append-file');
@@ -1307,6 +1508,7 @@
                 title: title,
                 author: author,
                 category: category,
+                publicTag: publicTag,
                 description: description,
                 isAdvanced: isAdvanced
             };
@@ -1360,11 +1562,18 @@
 
         async function openViewer(id) {
             const targetBookMeta = books.find(b => b.id === id);
+            const userRole = currentUser ? currentUser.role : 'guest';
 
-            if ((!targetBookMeta || targetBookMeta.category !== 'Общественные писания') && !currentUser) {
-                showToast('🔒 Авторизуйтесь для доступа к закрытым трудам!');
-                switchTab('login');
-                return;
+            if (targetBookMeta) {
+                if ((targetBookMeta.category === 'Исследования' || targetBookMeta.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                    showToast('🔒 Этот труд доступен только Профессорам и Смотрителю!');
+                    return;
+                }
+
+                if (userRole === 'guest' && !guestPermissions[targetBookMeta.category]) {
+                    showToast('🔒 У вас нет доступа к этой категории!');
+                    return;
+                }
             }
 
             const body = document.getElementById('modal-viewer-body');
@@ -1463,6 +1672,7 @@
             const title = document.getElementById('book-title').value.trim();
             const author = document.getElementById('book-author').value.trim();
             const category = document.getElementById('book-category').value;
+            const publicTag = document.getElementById('book-public-tag').value;
             const description = document.getElementById('book-desc').value.trim();
             const isAdvanced = document.getElementById('book-is-advanced').checked;
 
@@ -1490,6 +1700,7 @@
                     title: title,
                     author: author,
                     category: category,
+                    publicTag: publicTag,
                     description: description,
                     isAdvanced: isAdvanced,
                     pageCount: compressedImages.length,
