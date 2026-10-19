@@ -11,6 +11,7 @@
     
     <!-- Firebase SDK (Compat v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
@@ -27,6 +28,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
         async function hashPassword(password) {
             const encoder = new TextEncoder();
@@ -493,7 +495,6 @@
                         </select>
                     </div>
 
-                    <!-- Доп. подфильтр для Общественных писаний -->
                     <div id="public-subfilter-box" style="display: none;">
                         <select id="public-subfilter" onchange="renderCatalog()">
                             <option value="all">Все публичные труды</option>
@@ -620,7 +621,6 @@
                                 <div class="form-group full-width">
                                     <label for="book-file">Страницы книги (много файлов, поддерживается 50+ страниц) *</label>
                                     <input type="file" id="book-file" multiple accept="image/jpeg,image/png" required>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">⚡ Страницы загружаются порциями для абсолютной стабильности.</span>
                                 </div>
                                 <div class="form-group full-width">
                                     <label for="book-desc">Описание</label>
@@ -704,7 +704,6 @@
             <div class="viewer-header">
                 <div id="modal-book-title" style="color: var(--text-gold); font-family: var(--font-title); font-weight: bold;">Просмотр</div>
                 
-                <!-- Панель управления масштабированием -->
                 <div class="zoom-controls">
                     <button class="zoom-btn" onclick="changeZoom(-0.25)" title="Уменьшить">-</button>
                     <span class="zoom-indicator" id="zoom-value">100%</span>
@@ -769,7 +768,6 @@
                     <div class="form-group">
                         <label for="edit-book-append-file">Дозагрузить страницы (JPEG, PNG)</label>
                         <input type="file" id="edit-book-append-file" multiple accept="image/jpeg,image/png">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">⚡ Новые изображения добавятся в конец книги.</span>
                     </div>
                     <div class="form-group">
                         <label for="edit-book-desc">Описание</label>
@@ -794,7 +792,6 @@
         let allDeletedUsersData = {};
         let allRequestsData = {};
 
-        // Настройки сортировки пользователей в таблице
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
 
@@ -1070,12 +1067,39 @@
             const charName = document.getElementById('login-charname').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
-
             const passwordHash = await hashPassword(password);
+            const email = dbKey + "@arcanaeum.local";
 
-            db.ref('users/' + dbKey).once('value').then(snapshot => {
+            try {
+                try {
+                    await auth.signInWithEmailAndPassword(email, passwordHash);
+                } catch (signInErr) {
+                    if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential') {
+                        const snapshot = await db.ref('users/' + dbKey).once('value');
+                        const userData = snapshot.val();
+                        if (userData && userData.password === passwordHash) {
+                            const secondaryApp = firebase.initializeApp(firebaseConfig, "MigrationApp" + Date.now());
+                            const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, passwordHash);
+                            const newUid = cred.user.uid;
+                            await secondaryApp.auth().signOut();
+                            await secondaryApp.delete();
+
+                            await db.ref('users/' + dbKey + '/uid').set(newUid);
+                            if (userData.role === 'keeper') await db.ref('keepers/' + newUid).set(true);
+                            if (userData.role === 'professor') await db.ref('professors/' + newUid).set(true);
+
+                            await auth.signInWithEmailAndPassword(email, passwordHash);
+                        } else {
+                            throw new Error('Неверные данные');
+                        }
+                    } else {
+                        throw signInErr;
+                    }
+                }
+
+                const snapshot = await db.ref('users/' + dbKey).once('value');
                 const userData = snapshot.val();
-                if (userData && userData.password === passwordHash) {
+                if (userData) {
                     currentUser = { 
                         key: dbKey, 
                         name: userData.name, 
@@ -1087,19 +1111,22 @@
                     showToast(`✨ Добро пожаловать, ${userData.name}!`);
                     switchTab('catalog');
                 } else {
-                    showToast('❌ Неверное имя персонажа или пароль!');
+                    showToast('❌ Данные пользователя не найдены.');
                 }
-            }).catch(err => {
-                showToast('❌ Ошибка подключения к базе');
-            });
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Неверное имя персонажа или пароль!');
+            }
         }
 
         function userLogout() {
-            currentUser = null;
-            sessionStorage.removeItem('skyrim_user');
-            updateUIAuthState();
-            showToast('👋 Вы вышли из системы.');
-            switchTab('home');
+            auth.signOut().then(() => {
+                currentUser = null;
+                sessionStorage.removeItem('skyrim_user');
+                updateUIAuthState();
+                showToast('👋 Вы вышли из системы.');
+                switchTab('home');
+            });
         }
 
         async function handleRequestSubmit(e) {
@@ -1114,7 +1141,6 @@
             }
 
             const passwordHash = await hashPassword(password);
-
             const reqData = {
                 name: charName,
                 password: passwordHash,
@@ -1335,8 +1361,14 @@
             });
 
             db.ref('users/' + dbKey + '/permissions').set(newPerms).then(() => {
+                if (allUsersData[dbKey]) {
+                    allUsersData[dbKey].permissions = newPerms;
+                }
                 showToast('✨ Персональные доступы гостя успешно сохранены!');
                 closeUserPermModal();
+                renderCatalog();
+            }).catch(err => {
+                showToast('❌ Ошибка сохранения: ' + err.message);
             });
         }
 
@@ -1374,7 +1406,7 @@
             });
         }
 
-        function changeUserRole(dbKey, newRole) {
+        async function changeUserRole(dbKey, newRole) {
             if (dbKey === 'шалдир') {
                 showToast('⛔ Аккаунт "Шалдир" защищен от изменения роли!');
                 renderUsersTable();
@@ -1391,12 +1423,24 @@
                 return;
             }
 
-            db.ref('users/' + dbKey + '/role').set(newRole).then(() => {
-                showToast(`✨ Роль пользователя обновлена!`);
-            });
+            const targetUser = allUsersData[dbKey];
+            const oldRole = targetUser.role;
+            const uid = targetUser.uid;
+
+            await db.ref('users/' + dbKey + '/role').set(newRole);
+
+            if (uid) {
+                if (oldRole === 'keeper') await db.ref('keepers/' + uid).remove();
+                if (oldRole === 'professor') await db.ref('professors/' + uid).remove();
+
+                if (newRole === 'keeper') await db.ref('keepers/' + uid).set(true);
+                if (newRole === 'professor') await db.ref('professors/' + uid).set(true);
+            }
+
+            showToast(`✨ Роль пользователя обновлена!`);
         }
 
-        function deleteUser(dbKey) {
+        async function deleteUser(dbKey) {
             if (dbKey === 'шалдир') {
                 showToast('⛔ Этот аккаунт защищен от удаления!');
                 return;
@@ -1409,6 +1453,11 @@
             }
 
             if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
+                if (targetUser.uid) {
+                    if (targetUser.role === 'keeper') await db.ref('keepers/' + targetUser.uid).remove();
+                    if (targetUser.role === 'professor') await db.ref('professors/' + targetUser.uid).remove();
+                }
+
                 db.ref('deleted_users/' + dbKey).set(targetUser).then(() => {
                     db.ref('users/' + dbKey).remove().then(() => {
                         showToast('🗑️ Пользователь перемещен в удаленные.');
@@ -1419,7 +1468,7 @@
             }
         }
 
-        function restoreUser(dbKey) {
+        async function restoreUser(dbKey) {
             if (!currentUser || currentUser.role !== 'keeper') {
                 showToast('⛔ Только Смотритель может восстанавливать пользователей!');
                 return;
@@ -1427,25 +1476,45 @@
 
             const targetUser = allDeletedUsersData[dbKey];
             if (targetUser) {
-                db.ref('users/' + dbKey).set(targetUser).then(() => {
-                    db.ref('deleted_users/' + dbKey).remove().then(() => {
-                        showToast(`✨ Пользователь ${targetUser.name} восстановлен!`);
-                    });
-                });
+                await db.ref('users/' + dbKey).set(targetUser);
+                if (targetUser.uid) {
+                    if (targetUser.role === 'keeper') await db.ref('keepers/' + targetUser.uid).set(true);
+                    if (targetUser.role === 'professor') await db.ref('professors/' + targetUser.uid).set(true);
+                }
+                await db.ref('deleted_users/' + dbKey).remove();
+                showToast(`✨ Пользователь ${targetUser.name} восстановлен!`);
             }
         }
 
-        function approveUser(dbKey, roleToAssign) {
+        async function approveUser(dbKey, roleToAssign) {
             const req = allRequestsData[dbKey];
             if (req) {
-                db.ref('users/' + dbKey).set({
-                    name: req.name,
-                    password: req.password,
-                    role: roleToAssign,
-                    permissions: {}
-                });
-                db.ref('requests/' + dbKey + '/status').set('approved');
-                showToast(`✅ Заявка для ${req.name} одобрена!`);
+                try {
+                    const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryApp" + Date.now());
+                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(dbKey + "@arcanaeum.local", req.password);
+                    const newUid = cred.user.uid;
+                    await secondaryApp.auth().signOut();
+                    await secondaryApp.delete();
+
+                    await db.ref('users/' + dbKey).set({
+                        name: req.name,
+                        password: req.password,
+                        role: roleToAssign,
+                        permissions: {},
+                        uid: newUid
+                    });
+
+                    if (roleToAssign === 'keeper') {
+                        await db.ref('keepers/' + newUid).set(true);
+                    } else if (roleToAssign === 'professor') {
+                        await db.ref('professors/' + newUid).set(true);
+                    }
+
+                    db.ref('requests/' + dbKey + '/status').set('approved');
+                    showToast(`✅ Заявка для ${req.name} одобрена!`);
+                } catch (err) {
+                    showToast('❌ Ошибка: ' + err.message);
+                }
             }
         }
 
