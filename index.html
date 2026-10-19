@@ -1071,29 +1071,26 @@
             const email = dbKey + "@arcanaeum.local";
 
             try {
+                // Пытаемся войти в системный модуль Firebase Auth
                 try {
                     await auth.signInWithEmailAndPassword(email, passwordHash);
                 } catch (signInErr) {
-                    if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential') {
-                        const snapshot = await db.ref('users/' + dbKey).once('value');
-                        const userData = snapshot.val();
-                        if (userData && userData.password === passwordHash) {
-                            const secondaryApp = firebase.initializeApp(firebaseConfig, "MigrationApp" + Date.now());
-                            const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, passwordHash);
+                    // Если пользователя еще нет в системном Firebase Auth, регистрируем его автоматически
+                    const snapshot = await db.ref('users/' + dbKey).once('value');
+                    const userData = snapshot.val();
+                    if (userData && userData.password === passwordHash) {
+                        try {
+                            const cred = await auth.createUserWithEmailAndPassword(email, passwordHash);
                             const newUid = cred.user.uid;
-                            await secondaryApp.auth().signOut();
-                            await secondaryApp.delete();
 
                             await db.ref('users/' + dbKey + '/uid').set(newUid);
                             if (userData.role === 'keeper') await db.ref('keepers/' + newUid).set(true);
                             if (userData.role === 'professor') await db.ref('professors/' + newUid).set(true);
-
-                            await auth.signInWithEmailAndPassword(email, passwordHash);
-                        } else {
-                            throw new Error('Неверные данные');
+                        } catch (createErr) {
+                            console.error("Ошибка авто-регистрации Firebase Auth:", createErr);
                         }
                     } else {
-                        throw signInErr;
+                        throw new Error('Неверные данные');
                     }
                 }
 
@@ -1424,8 +1421,8 @@
             }
 
             const targetUser = allUsersData[dbKey];
-            const oldRole = targetUser.role;
-            const uid = targetUser.uid;
+            const oldRole = targetUser ? targetUser.role : 'member';
+            const uid = targetUser ? targetUser.uid : null;
 
             await db.ref('users/' + dbKey + '/role').set(newRole);
 
@@ -1453,7 +1450,7 @@
             }
 
             if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
-                if (targetUser.uid) {
+                if (targetUser && targetUser.uid) {
                     if (targetUser.role === 'keeper') await db.ref('keepers/' + targetUser.uid).remove();
                     if (targetUser.role === 'professor') await db.ref('professors/' + targetUser.uid).remove();
                 }
@@ -1490,25 +1487,12 @@
             const req = allRequestsData[dbKey];
             if (req) {
                 try {
-                    const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryApp" + Date.now());
-                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(dbKey + "@arcanaeum.local", req.password);
-                    const newUid = cred.user.uid;
-                    await secondaryApp.auth().signOut();
-                    await secondaryApp.delete();
-
                     await db.ref('users/' + dbKey).set({
                         name: req.name,
                         password: req.password,
                         role: roleToAssign,
-                        permissions: {},
-                        uid: newUid
+                        permissions: {}
                     });
-
-                    if (roleToAssign === 'keeper') {
-                        await db.ref('keepers/' + newUid).set(true);
-                    } else if (roleToAssign === 'professor') {
-                        await db.ref('professors/' + newUid).set(true);
-                    }
 
                     db.ref('requests/' + dbKey + '/status').set('approved');
                     showToast(`✅ Заявка для ${req.name} одобрена!`);
