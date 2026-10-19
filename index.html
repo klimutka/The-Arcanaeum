@@ -491,7 +491,7 @@
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
                             <option value="Исследования" class="prof-keeper-only" style="display:none;">🔬 Исследования (Закрыто)</option>
-                            <option value="Дневники/Доклады" class="prof-keeper-only" style="display:none;">📓 Дневники / Доклады (Закрыто)</option>
+                            <option value="Дневники-Доклады" class="prof-keeper-only" style="display:none;">📓 Дневники-Доклады (Закрыто)</option>
                         </select>
                     </div>
 
@@ -606,7 +606,7 @@
                                         <option value="Зачарование">Зачарование</option>
                                         <option value="Алхимия">🧪 Алхимия</option>
                                         <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                                        <option value="Дневники/Доклады">📓 Дневники / Доклады (Только Профессоры/Смотритель)</option>
+                                        <option value="Дневники-Доклады">📓 Дневники-Доклады (Только Профессоры/Смотритель)</option>
                                     </select>
                                 </div>
 
@@ -755,7 +755,7 @@
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
                             <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                            <option value="Дневники/Доклады">📓 Дневники / Доклады (Только Профессоры/Смотритель)</option>
+                            <option value="Дневники-Доклады">📓 Дневники-Доклады (Только Профессоры/Смотритель)</option>
                         </select>
                     </div>
                     <div class="form-group" id="edit-book-public-tag-box">
@@ -816,7 +816,7 @@
             "Зачарование",
             "Алхимия",
             "Исследования",
-            "Дневники/Доклады"
+            "Дневники-Доклады"
         ];
 
         let currentZoom = 1;
@@ -1525,7 +1525,7 @@
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                if ((b.category === 'Исследования' || b.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                if ((b.category === 'Исследования' || b.category === 'Дневники-Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
                     return false;
                 }
 
@@ -1581,7 +1581,7 @@
                     }
                 }
 
-                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Дневники/Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
+                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Дневники-Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
 
                 card.innerHTML = `
                     <div>
@@ -1727,7 +1727,7 @@
             const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
             if (targetBookMeta) {
-                if ((targetBookMeta.category === 'Исследования' || targetBookMeta.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                if ((targetBookMeta.category === 'Исследования' || targetBookMeta.category === 'Дневники-Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
                     showToast('🔒 Этот труд доступен только Профессорам и Смотрителю!');
                     return;
                 }
