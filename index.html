@@ -488,7 +488,6 @@
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
-                            <!-- Доступны только Профессорам и Смотрителям -->
                             <option value="Исследования" class="prof-keeper-only" style="display:none;">🔬 Исследования (Закрыто)</option>
                             <option value="Дневники/Доклады" class="prof-keeper-only" style="display:none;">📓 Дневники / Доклады (Закрыто)</option>
                         </select>
@@ -796,8 +795,8 @@
         let allRequestsData = {};
 
         // Настройки сортировки пользователей в таблице
-        let userSortField = 'role'; // 'name' или 'role'
-        let userSortDirection = 'asc'; // 'asc' или 'desc'
+        let userSortField = 'role'; 
+        let userSortDirection = 'asc'; 
 
         const ROLE_PRIORITY = {
             'keeper': 1,
@@ -806,7 +805,6 @@
             'guest': 4
         };
 
-        // Настройки глобальных доступов для незарегистрированных анонимных гостей
         let globalGuestPermissions = {
             "Общественные писания": true
         };
@@ -1178,7 +1176,6 @@
             db.ref('users').on('value', snapshot => {
                 allUsersData = snapshot.val() || {};
                 
-                // Если наш текущий юзер обновлен в базе (например, ему добавили доступы)
                 if (currentUser && allUsersData[currentUser.key]) {
                     currentUser.permissions = allUsersData[currentUser.key].permissions || {};
                     currentUser.role = allUsersData[currentUser.key].role || 'member';
@@ -1205,7 +1202,6 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            // Обновляем иконки сортировки
             const iconName = document.getElementById('sort-icon-name');
             const iconRole = document.getElementById('sort-icon-role');
             if (iconName) iconName.innerText = userSortField === 'name' ? (userSortDirection === 'asc' ? '▲' : '▼') : '↕️';
@@ -1219,7 +1215,6 @@
                 return u.name.toLowerCase().includes(searchVal);
             });
 
-            // Сортировка участников
             userKeys.sort((aKey, bKey) => {
                 const uA = allUsersData[aKey];
                 const uB = allUsersData[bKey];
@@ -1255,7 +1250,6 @@
                 let actionHtml = '';
                 let roleSelectHtml = '';
 
-                // Кнопка настройки доступов для ролей "Гость"
                 let permBtnHtml = '';
                 if (currentRole === 'guest' && isCurrentKeeper) {
                     permBtnHtml = `<button class="btn-perm" onclick="openUserPermModal('${key}')">⚙️ Доступы</button>`;
@@ -1301,7 +1295,6 @@
             });
         }
 
-        // Модальное окно персональных доступов для Гостя
         function openUserPermModal(dbKey) {
             const user = allUsersData[dbKey];
             if (!user) return;
@@ -1507,14 +1500,11 @@
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                // 1. Проверка эксклюзивных категорий Профессоров и Смотрителя
                 if ((b.category === 'Исследования' || b.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
                     return false;
                 }
 
-                // 2. Проверка ограничений для Роли "Гость"
                 if (userRole === 'guest') {
-                    // Если пользователь авторизован как Гость — смотрим его персональные доступы + общие
                     const hasPersonalPerm = !!userPerms[b.category];
                     const hasGlobalPerm = !!globalGuestPermissions[b.category];
                     if (!hasPersonalPerm && !hasGlobalPerm) {
@@ -1522,10 +1512,8 @@
                     }
                 }
 
-                // 3. Совпадение по категории из фильтра
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
 
-                // 4. Доп. подфильтр для «Общественных писаний»
                 if (categoryMatch && categoryVal === 'Общественные писания' && publicSubfilter !== 'all') {
                     if (b.publicTag !== publicSubfilter) {
                         return false;
@@ -1559,7 +1547,6 @@
                 let advancedBadgeHtml = book.isAdvanced ? `<div class="advanced-badge">⭐ Углубленные знания</div>` : '';
                 let authorHtml = book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic; margin-bottom: 0.4rem;">Автор: ${book.author}</div>` : '';
                 
-                // Тег подкатегории
                 let subTagHtml = '';
                 if (book.category === 'Общественные писания') {
                     if (book.publicTag === 'players') {
