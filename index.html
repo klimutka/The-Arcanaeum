@@ -828,6 +828,11 @@
         let isDragging = false;
         let startX, startY, scrollLeft, scrollTop;
 
+        // Переменные для постраничного рендеринга книги
+        let currentOpenBookPages = [];
+        let loadedPagesCount = 0;
+        const PAGES_PER_CHUNK = 10; // Порция страниц для подгрузки
+
         document.addEventListener('DOMContentLoaded', () => {
             listenGlobalGuestPermissions();
             updateUIAuthState();
@@ -1747,6 +1752,7 @@
             }
         }
 
+        // Обновленная функция открытия книги (с постраничным рендерингом)
         async function openViewer(id) {
             const targetBookMeta = books.find(b => b.id === id);
             const userRole = currentUser ? currentUser.role : 'guest';
@@ -1773,6 +1779,10 @@
             body.scrollTop = 0;
             resetZoom();
 
+            // Сбрасываем текущие данные книги перед открытием
+            currentOpenBookPages = [];
+            loadedPagesCount = 0;
+
             wrapper.innerHTML = `<div style="color: var(--text-gold); margin-top: 3rem; text-align: center; font-family: var(--font-title);" id="viewer-loader">⏳ Раскрываем фолиант...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
 
@@ -1788,39 +1798,67 @@
                 document.getElementById('modal-book-title').innerText = book.title + (book.author ? ` (${book.author})` : '');
                 wrapper.innerHTML = '';
 
+                // Собираем все страницы в массив, но в DOM пока НЕ рендерим
                 if (book.pages) {
-                    const pagesArray = Array.isArray(book.pages) ? book.pages : Object.values(book.pages);
-                    pagesArray.forEach((imgSrc, index) => {
-                        if (imgSrc) {
-                            const img = document.createElement('img');
-                            img.loading = 'lazy';
-                            img.decoding = 'async';
-                            img.src = imgSrc;
-                            img.className = 'book-page-img';
-                            img.alt = `Страница ${index + 1}`;
-                            wrapper.appendChild(img);
-                        }
-                    });
+                    currentOpenBookPages = Array.isArray(book.pages) ? book.pages : Object.values(book.pages);
                 } else if (Array.isArray(book.fileData)) {
-                    book.fileData.forEach((imgSrc, index) => {
-                        const img = document.createElement('img');
-                        img.loading = 'lazy';
-                        img.decoding = 'async';
-                        img.src = imgSrc;
-                        img.className = 'book-page-img';
-                        img.alt = `Страница ${index + 1}`;
-                        wrapper.appendChild(img);
-                    });
+                    currentOpenBookPages = book.fileData;
                 } else if (book.fileData) {
-                    const img = document.createElement('img');
-                    img.loading = 'lazy';
-                    img.decoding = 'async';
-                    img.src = book.fileData;
-                    img.className = 'book-page-img';
-                    wrapper.appendChild(img);
+                    currentOpenBookPages = [book.fileData];
                 }
+
+                // Убираем возможные пустые значения
+                currentOpenBookPages = currentOpenBookPages.filter(img => img);
+
+                if (currentOpenBookPages.length === 0) {
+                    wrapper.innerHTML = `<div style="color: var(--text-muted); margin-top: 2rem;">В этом фолианте пока нет страниц.</div>`;
+                    return;
+                }
+
+                // Рендерим первую порцию страниц
+                renderNextBookChunk();
+
+                // Прикрепляем обработчик скролла для подгрузки остальных страниц
+                body.onscroll = checkViewerScroll;
+
             } catch (err) {
                 wrapper.innerHTML = `<div style="color: var(--danger); margin-top: 2rem;">Ошибка загрузки страниц: ${err.message}</div>`;
+            }
+        }
+
+        // Рендеринг следующей порции страниц
+        function renderNextBookChunk() {
+            const wrapper = document.getElementById('viewer-pages-wrapper');
+            if (!wrapper || currentOpenBookPages.length === 0) return;
+
+            const startIndex = loadedPagesCount;
+            const endIndex = Math.min(startIndex + PAGES_PER_CHUNK, currentOpenBookPages.length);
+
+            if (startIndex >= endIndex) return;
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const imgSrc = currentOpenBookPages[i];
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.src = imgSrc;
+                img.className = 'book-page-img';
+                img.alt = `Страница ${i + 1}`;
+                wrapper.appendChild(img);
+            }
+
+            loadedPagesCount = endIndex;
+        }
+
+        // Автоматическая подгрузка порции при прокрутке до низа
+        function checkViewerScroll() {
+            const body = document.getElementById('modal-viewer-body');
+            if (!body) return;
+
+            if (body.scrollTop + body.clientHeight >= body.scrollHeight - 300) {
+                if (loadedPagesCount < currentOpenBookPages.length) {
+                    renderNextBookChunk();
+                }
             }
         }
 
@@ -1840,10 +1878,13 @@
             const wrapper = document.getElementById('viewer-pages-wrapper');
             if (body) {
                 body.scrollTop = 0;
+                body.onscroll = null; // Очищаем обработчик скролла
             }
             if (wrapper) {
                 wrapper.innerHTML = '';
             }
+            currentOpenBookPages = [];
+            loadedPagesCount = 0;
             resetZoom();
             document.getElementById('viewer-container-box').classList.remove('fullscreen');
             document.getElementById('fullscreen-btn').innerText = '🖎 На весь экран';
