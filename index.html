@@ -395,6 +395,7 @@
         .btn-edit { background: #854d0e; color: #fff; margin-top: 0.5rem; width: 100%; }
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; width: 100%; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
+        .btn-perm { background: #1d4ed8; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); margin-right: 0.4rem; }
         .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
 
         .guest-perm-grid {
@@ -405,6 +406,15 @@
             padding: 1rem;
             border: 1px solid var(--border-gold-dark);
             margin-top: 0.8rem;
+        }
+
+        .sort-header {
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+        .sort-header:hover {
+            color: #fff !important;
         }
     </style>
 </head>
@@ -444,7 +454,7 @@
                     </div>
 
                     <p id="home-status-text">
-                        Разрешенные Смотрителем категории трудов открыты для всех гостей!
+                        Разрешенные Смотрителем категории трудов открыты для гостей!
                     </p>
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -562,15 +572,13 @@
                         <span id="user-role-badge"></span>
                     </div>
 
-                    <!-- Смотритель: Настройки доступов для ролей Гостей -->
+                    <!-- Смотритель: Глобальные настройки доступов по умолчанию для анонимных гостей -->
                     <div id="guest-permissions-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">⚙️ Настройки доступа для роли "Гость"</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted);">Отметьте категории трудов, которые будут открыты для всех неавторизованных гостей:</p>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">⚙️ Доступы для анонимных незарегистрированных Гостей</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Отметьте категории, доступные неавторизованным людям с улицы:</p>
                         
-                        <div class="guest-perm-grid" id="guest-perm-checkboxes">
-                            <!-- Заполняется динамически JS -->
-                        </div>
-                        <button class="btn-gold" onclick="saveGuestPermissions()" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.8rem;">Сохранить настройки доступов</button>
+                        <div class="guest-perm-grid" id="guest-perm-checkboxes"></div>
+                        <button class="btn-gold" onclick="saveGlobalGuestPermissions()" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.8rem;">Сохранить общие доступы</button>
                     </div>
                     
                     <!-- Form: Add Book (Keeper Only) -->
@@ -643,11 +651,18 @@
                     <div id="manage-users-container" style="margin-top: 2.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                             <h3 style="font-family: var(--font-title); color: var(--text-gold);">👥 Управление Доступами и Ролями</h3>
-                            <input type="text" id="user-search-input" placeholder="🔍 Поиск по нику персонажа..." oninput="renderUsersTable()" style="max-width: 280px; padding: 0.5rem; font-size: 0.85rem;">
+                            <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="user-search-input" placeholder="🔍 Поиск по нику персонажа..." oninput="renderUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
+                            </div>
                         </div>
                         <table class="requests-table">
                             <thead>
-                                <tr><th>Имя Персонажа</th><th>Текущая Роль</th><th>Изменить Роль</th><th>Действие</th></tr>
+                                <tr>
+                                    <th class="sort-header" onclick="toggleUserSort('name')">Имя Персонажа <span id="sort-icon-name">↕️</span></th>
+                                    <th class="sort-header" onclick="toggleUserSort('role')">Текущая Роль <span id="sort-icon-role">↕️</span></th>
+                                    <th>Изменить Роль</th>
+                                    <th>Действие</th>
+                                </tr>
                             </thead>
                             <tbody id="users-tbody"></tbody>
                         </table>
@@ -667,6 +682,22 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal Individual Guest Permissions -->
+    <div class="modal-overlay" id="user-perm-modal">
+        <div class="edit-modal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.8rem;">
+                <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="user-perm-title">⚙️ Доступы для Гостя</h3>
+                <button onclick="closeUserPermModal()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Отметьте, к каким категориям книг данный пользователь роли "Гость" имеет персональный доступ:</p>
+            <input type="hidden" id="user-perm-target-key">
+            
+            <div class="guest-perm-grid" id="user-perm-checkboxes-container"></div>
+            
+            <button class="btn-gold" onclick="saveUserGuestPermissions()" style="width: 100%; margin-top: 1.5rem;">Сохранить Доступы</button>
+        </div>
+    </div>
 
     <!-- Modal Viewer -->
     <div class="modal-overlay" id="viewer-modal">
@@ -764,8 +795,19 @@
         let allDeletedUsersData = {};
         let allRequestsData = {};
 
-        // Разрешенные категории для роли Гостя по умолчанию
-        let guestPermissions = {
+        // Настройки сортировки пользователей в таблице
+        let userSortField = 'role'; // 'name' или 'role'
+        let userSortDirection = 'asc'; // 'asc' или 'desc'
+
+        const ROLE_PRIORITY = {
+            'keeper': 1,
+            'professor': 2,
+            'member': 3,
+            'guest': 4
+        };
+
+        // Настройки глобальных доступов для незарегистрированных анонимных гостей
+        let globalGuestPermissions = {
             "Общественные писания": true
         };
 
@@ -787,7 +829,7 @@
         let startX, startY, scrollLeft, scrollTop;
 
         document.addEventListener('DOMContentLoaded', () => {
-            listenGuestPermissions();
+            listenGlobalGuestPermissions();
             updateUIAuthState();
             listenFirebaseBooks();
             listenFirebaseUsers();
@@ -796,47 +838,47 @@
             initViewerDragAndZoom();
         });
 
-        function listenGuestPermissions() {
+        function listenGlobalGuestPermissions() {
             db.ref('guest_permissions').on('value', snapshot => {
                 const val = snapshot.val();
                 if (val) {
-                    guestPermissions = val;
+                    globalGuestPermissions = val;
                 }
-                renderGuestPermissionCheckboxes();
+                renderGlobalGuestPermissionCheckboxes();
                 renderCatalog();
             });
         }
 
-        function renderGuestPermissionCheckboxes() {
+        function renderGlobalGuestPermissionCheckboxes() {
             const container = document.getElementById('guest-perm-checkboxes');
             if (!container) return;
             container.innerHTML = '';
 
             ALL_CATEGORIES.forEach(cat => {
-                const isChecked = !!guestPermissions[cat];
+                const isChecked = !!globalGuestPermissions[cat];
                 container.innerHTML += `
                     <label style="display:flex; align-items:center; gap: 0.5rem; cursor:pointer; color: var(--text-light); font-size:0.85rem;">
-                        <input type="checkbox" class="guest-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
+                        <input type="checkbox" class="global-guest-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
                         ${cat}
                     </label>
                 `;
             });
         }
 
-        function saveGuestPermissions() {
+        function saveGlobalGuestPermissions() {
             if (!currentUser || currentUser.role !== 'keeper') {
                 showToast('⛔ Только Смотритель может менять настройки!');
                 return;
             }
 
             let newPerms = {};
-            document.querySelectorAll('.guest-perm-check').forEach(chk => {
+            document.querySelectorAll('.global-guest-perm-check').forEach(chk => {
                 const cat = chk.getAttribute('data-category');
                 newPerms[cat] = chk.checked;
             });
 
             db.ref('guest_permissions').set(newPerms).then(() => {
-                showToast('✨ Настройки доступов для Гостей сохранены!');
+                showToast('✨ Настройки доступов для анонимных Гостей сохранены!');
             });
         }
 
@@ -1036,7 +1078,12 @@
             db.ref('users/' + dbKey).once('value').then(snapshot => {
                 const userData = snapshot.val();
                 if (userData && userData.password === passwordHash) {
-                    currentUser = { key: dbKey, name: userData.name, role: userData.role || 'member' };
+                    currentUser = { 
+                        key: dbKey, 
+                        name: userData.name, 
+                        role: userData.role || 'member',
+                        permissions: userData.permissions || {}
+                    };
                     sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                     updateUIAuthState();
                     showToast(`✨ Добро пожаловать, ${userData.name}!`);
@@ -1130,9 +1177,27 @@
         function listenFirebaseUsers() {
             db.ref('users').on('value', snapshot => {
                 allUsersData = snapshot.val() || {};
+                
+                // Если наш текущий юзер обновлен в базе (например, ему добавили доступы)
+                if (currentUser && allUsersData[currentUser.key]) {
+                    currentUser.permissions = allUsersData[currentUser.key].permissions || {};
+                    currentUser.role = allUsersData[currentUser.key].role || 'member';
+                    sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
+                }
+
                 renderUsersTable();
                 renderRequestsTable();
             });
+        }
+
+        function toggleUserSort(field) {
+            if (userSortField === field) {
+                userSortDirection = (userSortDirection === 'asc') ? 'desc' : 'asc';
+            } else {
+                userSortField = field;
+                userSortDirection = 'asc';
+            }
+            renderUsersTable();
         }
 
         function renderUsersTable() {
@@ -1140,30 +1205,61 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const searchVal = document.getElementById('user-search-input') ? document.getElementById('user-search-input').value.toLowerCase() : '';
-            const userKeys = Object.keys(allUsersData);
+            // Обновляем иконки сортировки
+            const iconName = document.getElementById('sort-icon-name');
+            const iconRole = document.getElementById('sort-icon-role');
+            if (iconName) iconName.innerText = userSortField === 'name' ? (userSortDirection === 'asc' ? '▲' : '▼') : '↕️';
+            if (iconRole) iconRole.innerText = userSortField === 'role' ? (userSortDirection === 'asc' ? '▲' : '▼') : '↕️';
 
-            const filteredKeys = userKeys.filter(key => {
+            const searchVal = document.getElementById('user-search-input') ? document.getElementById('user-search-input').value.toLowerCase() : '';
+            let userKeys = Object.keys(allUsersData);
+
+            userKeys = userKeys.filter(key => {
                 const u = allUsersData[key];
                 return u.name.toLowerCase().includes(searchVal);
             });
 
-            if (filteredKeys.length === 0) {
+            // Сортировка участников
+            userKeys.sort((aKey, bKey) => {
+                const uA = allUsersData[aKey];
+                const uB = allUsersData[bKey];
+
+                if (userSortField === 'name') {
+                    const comp = uA.name.localeCompare(uB.name, 'ru');
+                    return userSortDirection === 'asc' ? comp : -comp;
+                } else if (userSortField === 'role') {
+                    const pA = ROLE_PRIORITY[uA.role || 'member'] || 99;
+                    const pB = ROLE_PRIORITY[uB.role || 'member'] || 99;
+                    if (pA !== pB) {
+                        return userSortDirection === 'asc' ? pA - pB : pB - pA;
+                    }
+                    return uA.name.localeCompare(uB.name, 'ru');
+                }
+            });
+
+            if (userKeys.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Пользователи не найдены</td></tr>';
                 return;
             }
 
             const isCurrentProfessor = currentUser && currentUser.role === 'professor';
+            const isCurrentKeeper = currentUser && currentUser.role === 'keeper';
 
-            filteredKeys.forEach(key => {
+            userKeys.forEach(key => {
                 const u = allUsersData[key];
                 const currentRole = u.role || 'member';
                 const isTargetKeeper = currentRole === 'keeper';
                 const isShaldir = key === 'шалдир';
                 const isSelf = currentUser && currentUser.key === key;
 
-                let actionHtml = '-';
+                let actionHtml = '';
                 let roleSelectHtml = '';
+
+                // Кнопка настройки доступов для ролей "Гость"
+                let permBtnHtml = '';
+                if (currentRole === 'guest' && isCurrentKeeper) {
+                    permBtnHtml = `<button class="btn-perm" onclick="openUserPermModal('${key}')">⚙️ Доступы</button>`;
+                }
 
                 if (isShaldir) {
                     roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
@@ -1175,7 +1271,7 @@
                     roleSelectHtml = `<span class="role-tag role-prof">Профессор (Вы)</span>`;
                     actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Себя нельзя</span>`;
                 } else {
-                    actionHtml = `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                    actionHtml = `${permBtnHtml}<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
 
                     roleSelectHtml = `
                         <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
@@ -1202,6 +1298,52 @@
                         <td>${actionHtml}</td>
                     </tr>
                 `;
+            });
+        }
+
+        // Модальное окно персональных доступов для Гостя
+        function openUserPermModal(dbKey) {
+            const user = allUsersData[dbKey];
+            if (!user) return;
+
+            document.getElementById('user-perm-target-key').value = dbKey;
+            document.getElementById('user-perm-title').innerText = `⚙️ Доступы для гостя: ${user.name}`;
+
+            const container = document.getElementById('user-perm-checkboxes-container');
+            container.innerHTML = '';
+
+            const userPerms = user.permissions || {};
+
+            ALL_CATEGORIES.forEach(cat => {
+                const isChecked = !!userPerms[cat];
+                container.innerHTML += `
+                    <label style="display:flex; align-items:center; gap: 0.5rem; cursor:pointer; color: var(--text-light); font-size:0.85rem;">
+                        <input type="checkbox" class="user-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
+                        ${cat}
+                    </label>
+                `;
+            });
+
+            document.getElementById('user-perm-modal').classList.add('active');
+        }
+
+        function closeUserPermModal() {
+            document.getElementById('user-perm-modal').classList.remove('active');
+        }
+
+        function saveUserGuestPermissions() {
+            const dbKey = document.getElementById('user-perm-target-key').value;
+            if (!dbKey) return;
+
+            let newPerms = {};
+            document.querySelectorAll('.user-perm-check').forEach(chk => {
+                const cat = chk.getAttribute('data-category');
+                newPerms[cat] = chk.checked;
+            });
+
+            db.ref('users/' + dbKey + '/permissions').set(newPerms).then(() => {
+                showToast('✨ Персональные доступы гостя успешно сохранены!');
+                closeUserPermModal();
             });
         }
 
@@ -1306,7 +1448,8 @@
                 db.ref('users/' + dbKey).set({
                     name: req.name,
                     password: req.password,
-                    role: roleToAssign
+                    role: roleToAssign,
+                    permissions: {}
                 });
                 db.ref('requests/' + dbKey + '/status').set('approved');
                 showToast(`✅ Заявка для ${req.name} одобрена!`);
@@ -1358,6 +1501,7 @@
             container.innerHTML = '';
 
             const userRole = currentUser ? currentUser.role : 'guest';
+            const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
             const filtered = books.filter(b => {
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
@@ -1369,8 +1513,13 @@
                 }
 
                 // 2. Проверка ограничений для Роли "Гость"
-                if (userRole === 'guest' && !guestPermissions[b.category]) {
-                    return false;
+                if (userRole === 'guest') {
+                    // Если пользователь авторизован как Гость — смотрим его персональные доступы + общие
+                    const hasPersonalPerm = !!userPerms[b.category];
+                    const hasGlobalPerm = !!globalGuestPermissions[b.category];
+                    if (!hasPersonalPerm && !hasGlobalPerm) {
+                        return false;
+                    }
                 }
 
                 // 3. Совпадение по категории из фильтра
@@ -1388,7 +1537,7 @@
             
             if (filtered.length === 0) {
                 const noBooksMsg = userRole === 'guest' 
-                    ? 'Нет доступных трудов. Войдите в аккаунт с более высоким уровнем доступа.' 
+                    ? 'Нет доступных трудов. Попросите Смотрителя выдать вам доступ к дополнительным категориям.' 
                     : 'Ничего не найдено';
 
                 container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted); font-size: 0.95rem;">${noBooksMsg}</div>`;
@@ -1563,6 +1712,7 @@
         async function openViewer(id) {
             const targetBookMeta = books.find(b => b.id === id);
             const userRole = currentUser ? currentUser.role : 'guest';
+            const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
             if (targetBookMeta) {
                 if ((targetBookMeta.category === 'Исследования' || targetBookMeta.category === 'Дневники/Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
@@ -1570,9 +1720,13 @@
                     return;
                 }
 
-                if (userRole === 'guest' && !guestPermissions[targetBookMeta.category]) {
-                    showToast('🔒 У вас нет доступа к этой категории!');
-                    return;
+                if (userRole === 'guest') {
+                    const hasPersonalPerm = !!userPerms[targetBookMeta.category];
+                    const hasGlobalPerm = !!globalGuestPermissions[targetBookMeta.category];
+                    if (!hasPersonalPerm && !hasGlobalPerm) {
+                        showToast('🔒 У вас нет доступа к этой категории!');
+                        return;
+                    }
                 }
             }
 
