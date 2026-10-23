@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=MedievalSharp&family=Marcellus&display=swap" rel="stylesheet">
 
     <script>
-        // Укажите ссылку на ваш созданный Cloudflare Worker
         const WORKER_URL = "https://arcanaeum-api.klimutka.workers.dev";
 
         async function hashPassword(password) {
@@ -45,7 +44,7 @@
             background-image: 
                 radial-gradient(circle at 50% 0%, rgba(29, 78, 216, 0.15) 0%, transparent 70%),
                 radial-gradient(circle at 10% 90%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23c5a059' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23c5a059' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
             color: var(--text-light);
             font-family: var(--font-body);
             min-height: 100vh;
@@ -230,17 +229,6 @@
             text-transform: uppercase;
         }
 
-        .sub-tag {
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 6px;
-            border: 1px solid var(--border-gold-dark);
-            color: var(--text-light);
-            background: rgba(0,0,0,0.4);
-        }
-
         .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
         .requests-table th, .requests-table td {
             padding: 0.8rem; text-align: left;
@@ -265,13 +253,6 @@
             display: flex; flex-direction: column;
             transition: all 0.3s ease;
             position: relative;
-        }
-
-        .viewer-container.fullscreen {
-            max-width: 100vw !important;
-            height: 100vh !important;
-            border: none;
-            border-radius: 0;
         }
 
         .edit-modal-container {
@@ -311,9 +292,7 @@
             padding: 2px 8px;
             cursor: pointer;
             border-radius: 2px;
-            transition: background 0.2s;
         }
-        .zoom-btn:hover { background: var(--border-gold-dark); color: #fff; }
 
         .zoom-indicator {
             color: var(--text-gold);
@@ -332,8 +311,6 @@
             cursor: grab;
             user-select: none;
         }
-
-        .viewer-body:active { cursor: grabbing; }
 
         .viewer-pages-wrapper {
             display: flex;
@@ -380,7 +357,6 @@
         .btn-edit { background: #854d0e; color: #fff; margin-top: 0.5rem; width: 100%; }
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; width: 100%; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
-        .btn-perm { background: #1d4ed8; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); margin-right: 0.4rem; }
         .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
 
         .guest-perm-grid {
@@ -393,14 +369,8 @@
             margin-top: 0.8rem;
         }
 
-        .sort-header {
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.2s;
-        }
-        .sort-header:hover {
-            color: #fff !important;
-        }
+        .sort-header { cursor: pointer; user-select: none; }
+        .sort-header:hover { color: #fff !important; }
     </style>
 </head>
 <body>
@@ -431,20 +401,13 @@
                     <h2>🏛️ Добро пожаловать в Арканеум</h2>
                 </div>
                 <div class="home-description">
-                    <p>
-                        <strong>Арканеум</strong> — это главный книжный свод и закрытый архив Коллегии Винтерхолда. Здесь хранятся редчайшие гримуары, древние фолианты и исследовательские трактаты.
-                    </p>
-                    
+                    <p><strong>Арканеум</strong> — это главный книжный свод и закрытый архив Коллегии Винтерхолда.</p>
                     <div class="home-quote">
                         «Относитесь к этим книгам с уважением. Повредите хотя бы одну — и я лично прослежу, чтобы вас разнес на атомы разъяренный атронах.»
                     </div>
-
-                    <p id="home-status-text">
-                        Разрешенные Смотрителем категории трудов открыты для гостей!
-                    </p>
-                    
+                    <p id="home-status-text">Разрешенные Смотрителем категории трудов открыты для гостей!</p>
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn-gold" id="home-catalog-btn" onclick="switchTab('catalog')">📚 Перейти к Каталогу</button>
+                        <button class="btn-gold" onclick="switchTab('catalog')">📚 Перейти к Каталогу</button>
                         <button class="btn-gold" onclick="switchTab('services')">📜 Услуги Коллегии</button>
                         <button class="btn-gold" id="home-request-btn" onclick="switchTab('request')">🗝️ Запросить Доступ</button>
                     </div>
@@ -498,90 +461,32 @@
             <div class="skyrim-card">
                 <div class="section-header">
                     <h2>📜 Услуги и Расценки Коллегии Винтерхолда</h2>
+                    <button id="edit-services-btn" class="btn-gold" style="display:none; padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="openEditServicesModal()">✏️ Редактировать расценки</button>
                 </div>
                 <p style="margin-bottom: 2rem; color: var(--text-muted);">
                     Официальный прайс-лист на изготовление магических изделий и закупку кристаллов у мастеров Коллегии.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
-                    
-                    <!-- Свитки -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            📜 Свитки <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">3.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">9.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">30.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">130.000 септ</td></tr>
-                        </table>
-                    </div>
-
-                    <!-- Посохи -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            🪄 Посохи <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">15.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">40.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">80.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">180.000 септ</td></tr>
-                        </table>
-                    </div>
-
-                    <!-- Кристаллы маны -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            💎 Кристаллы маны <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Закуп</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">400 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">2.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">14.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
-                        </table>
-                    </div>
-
-                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;" id="services-display-grid"></div>
             </div>
         </section>
 
-        <!-- REQUEST ACCESS FORM SECTION -->
+        <!-- REQUEST SECTION -->
         <section id="request-section" class="section-panel">
             <div class="skyrim-card">
-                <div class="section-header">
-                    <h2>✉️ Запрос на Выдачу Доступа</h2>
-                </div>
-                <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
-                    Укажите <strong>Имя Персонажа</strong> и желаемый <strong>Пароль</strong> для входа в Закрытый Архив.
-                </p>
-
+                <div class="section-header"><h2>✉️ Запрос на Выдачу Доступа</h2></div>
                 <form id="access-request-form" onsubmit="handleRequestSubmit(event)">
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="req-name">Имя Персонажа *</label>
-                            <input type="text" id="req-name" required placeholder="Например: Фаренгар">
-                        </div>
-                        <div class="form-group">
-                            <label for="req-password">Желаемый Пароль *</label>
-                            <input type="password" id="req-password" required placeholder="Пароль...">
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="req-reason">Цель получения доступа *</label>
-                            <textarea id="req-reason" rows="3" required placeholder="Опишите цель исследований..."></textarea>
-                        </div>
+                        <div class="form-group"><label for="req-name">Имя Персонажа *</label><input type="text" id="req-name" required></div>
+                        <div class="form-group"><label for="req-password">Желаемый Пароль *</label><input type="password" id="req-password" required></div>
+                        <div class="form-group full-width"><label for="req-reason">Цель получения доступа *</label><textarea id="req-reason" rows="3" required></textarea></div>
                     </div>
                     <button type="submit" class="btn-gold">Отправить Заявку</button>
                 </form>
             </div>
         </section>
 
-        <!-- LOGIN SECTION -->
+        <!-- LOGIN / DASHBOARD SECTION -->
         <section id="login-section" class="section-panel">
             <div class="skyrim-card">
                 <div class="section-header">
@@ -592,53 +497,35 @@
                 <div id="auth-block" class="lock-screen">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
                     <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">Вход в Архив</h3>
-                    
                     <form id="login-form" onsubmit="handleLoginSubmit(event)">
                         <div style="display: flex; flex-direction: column; gap: 1rem; text-align: left; margin-bottom: 1.5rem;">
-                            <div class="form-group">
-                                <label for="login-charname">Имя Персонажа *</label>
-                                <input type="text" id="login-charname" required placeholder="Имя вашего персонажа...">
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password">Пароль *</label>
-                                <input type="password" id="login-password" required placeholder="Ваш пароль...">
-                            </div>
+                            <div class="form-group"><label>Имя Персонажа *</label><input type="text" id="login-charname" required></div>
+                            <div class="form-group"><label>Пароль *</label><input type="password" id="login-password" required></div>
                         </div>
                         <button type="submit" class="btn-gold" style="width: 100%;">Войти</button>
                     </form>
                 </div>
 
-                <!-- Control Dashboard -->
                 <div id="admin-dashboard" style="display: none;">
                     <div style="margin-bottom: 1.5rem; background: rgba(197, 160, 89, 0.1); padding: 1rem; border: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="dashboard-title">🧙‍♂️ Панель Управления</h3>
                         <span id="user-role-badge"></span>
                     </div>
 
-                    <!-- Смотритель: Настройки доступов по умолчанию -->
                     <div id="guest-permissions-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">⚙️ Доступы для анонимных незарегистрированных Гостей</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted);">Отметьте категории, доступные неавторизованным людям с улицы:</p>
-                        
                         <div class="guest-perm-grid" id="guest-perm-checkboxes"></div>
                         <button class="btn-gold" onclick="saveGlobalGuestPermissions()" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.8rem;">Сохранить общие доступы</button>
                     </div>
-                    
-                    <!-- Form: Add Book (Keeper Only) -->
+
                     <div id="add-book-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Загрузить Книгу в Архив</h3>
                         <form id="add-book-form" onsubmit="handleAddBook(event)">
                             <div class="form-grid">
+                                <div class="form-group"><label>Название *</label><input type="text" id="book-title" required></div>
+                                <div class="form-group"><label>Автор Трактата</label><input type="text" id="book-author"></div>
                                 <div class="form-group">
-                                    <label for="book-title">Название *</label>
-                                    <input type="text" id="book-title" required placeholder="Название трактата...">
-                                </div>
-                                <div class="form-group">
-                                    <label for="book-author">Автор Трактата</label>
-                                    <input type="text" id="book-author" placeholder="Например: Маэль Телванни">
-                                </div>
-                                <div class="form-group">
-                                    <label for="book-category">Категория *</label>
+                                    <label>Категория *</label>
                                     <select id="book-category" required onchange="toggleAddBookSubtype()">
                                         <option value="Общественные писания">📜 Общественные писания</option>
                                         <option value="Разрушение">Школа Разрушения</option>
@@ -648,54 +535,43 @@
                                         <option value="Изменение">Школа Изменения</option>
                                         <option value="Зачарование">Зачарование</option>
                                         <option value="Алхимия">🧪 Алхимия</option>
-                                        <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                                        <option value="Доклады">📓 Доклады (Члены Коллегии/Профессоры/Смотритель)</option>
+                                        <option value="Исследования">🔬 Исследования</option>
+                                        <option value="Доклады">📓 Доклады</option>
                                     </select>
                                 </div>
-
                                 <div class="form-group" id="add-book-public-tag-box">
-                                    <label for="book-public-tag">Тип общественного писания</label>
+                                    <label>Тип общественного писания</label>
                                     <select id="book-public-tag">
                                         <option value="tes">📜 Книга из TES</option>
                                         <option value="players">✍️ Книга, написанная игроками</option>
                                     </select>
                                 </div>
-
                                 <div class="form-group full-width">
-                                    <label for="book-file">Страницы книги (много файлов, поддерживается 50+ страниц) *</label>
+                                    <label>Страницы книги (файлы JPEG, PNG) *</label>
                                     <input type="file" id="book-file" multiple accept="image/jpeg,image/png" required>
                                 </div>
-                                <div class="form-group full-width">
-                                    <label for="book-desc">Описание</label>
-                                    <textarea id="book-desc" rows="2" placeholder="Описание..."></textarea>
-                                </div>
+                                <div class="form-group full-width"><label>Описание</label><textarea id="book-desc" rows="2"></textarea></div>
                                 <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 0.8rem;">
-                                    <input type="checkbox" id="book-is-advanced" style="width: 18px; height: 18px; cursor: pointer;">
-                                    <label for="book-is-advanced" style="cursor: pointer; font-size: 0.9rem; color: var(--text-gold);">Отметить как "Углубленные знания"</label>
+                                    <input type="checkbox" id="book-is-advanced" style="width: 18px; height: 18px;">
+                                    <label for="book-is-advanced">Отметить как "Углубленные знания"</label>
                                 </div>
                             </div>
                             <button type="submit" class="btn-gold" id="upload-btn">Добавить в Архив</button>
                         </form>
                     </div>
 
-                    <!-- Manage Requests -->
                     <div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">📋 Поступившие Заявки</h3>
                         <table class="requests-table">
-                            <thead>
-                                <tr><th>Имя Персонажа</th><th>Цель</th><th>Статус</th><th>Действия</th></tr>
-                            </thead>
+                            <thead><tr><th>Имя Персонажа</th><th>Цель</th><th>Статус</th><th>Действия</th></tr></thead>
                             <tbody id="requests-tbody"></tbody>
                         </table>
                     </div>
 
-                    <!-- Manage Users & Roles -->
                     <div id="manage-users-container" style="margin-top: 2.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                             <h3 style="font-family: var(--font-title); color: var(--text-gold);">👥 Управление Доступами и Ролями</h3>
-                            <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
-                                <input type="text" id="user-search-input" placeholder="🔍 Поиск по нику персонажа..." oninput="renderUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
-                            </div>
+                            <input type="text" id="user-search-input" placeholder="🔍 Поиск по нику..." oninput="renderUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
                         </div>
                         <table class="requests-table">
                             <thead>
@@ -710,18 +586,13 @@
                         </table>
                     </div>
 
-                    <!-- Deleted Users Section -->
                     <div id="deleted-users-container" style="margin-top: 2.5rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                             <h3 style="font-family: var(--font-title); color: var(--text-gold);">🗑️ Удаленные Пользователи</h3>
-                            <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
-                                <input type="text" id="deleted-user-search-input" placeholder="🔍 Поиск по нику..." oninput="renderDeletedUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
-                            </div>
+                            <input type="text" id="deleted-user-search-input" placeholder="🔍 Поиск..." oninput="renderDeletedUsersTable()" style="max-width: 250px; padding: 0.5rem; font-size: 0.85rem;">
                         </div>
                         <table class="requests-table">
-                            <thead>
-                                <tr><th>Имя Персонажа</th><th>Бывшая Роль</th><th>Действие</th></tr>
-                            </thead>
+                            <thead><tr><th>Имя Персонажа</th><th>Бывшая Роль</th><th>Действие</th></tr></thead>
                             <tbody id="deleted-users-tbody"></tbody>
                         </table>
                     </div>
@@ -730,50 +601,26 @@
         </section>
     </main>
 
-    <!-- Modal Individual Guest Permissions -->
-    <div class="modal-overlay" id="user-perm-modal">
-        <div class="edit-modal-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.8rem;">
-                <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="user-perm-title">⚙️ Доступы для Гостя</h3>
-                <button onclick="closeUserPermModal()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Отметьте, к каким категориям книг данный пользователь роли "Гость" имеет персональный доступ:</p>
-            <input type="hidden" id="user-perm-target-key">
-            
-            <div class="guest-perm-grid" id="user-perm-checkboxes-container"></div>
-            
-            <button class="btn-gold" onclick="saveUserGuestPermissions()" style="width: 100%; margin-top: 1.5rem;">Сохранить Доступы</button>
-        </div>
-    </div>
-
     <!-- Modal Viewer -->
     <div class="modal-overlay" id="viewer-modal">
         <div class="viewer-container" id="viewer-container-box">
             <div class="viewer-header">
                 <div id="modal-book-title" style="color: var(--text-gold); font-family: var(--font-title); font-weight: bold;">Просмотр</div>
-                
                 <div class="zoom-controls">
-                    <button class="zoom-btn" onclick="changeZoom(-0.25)" title="Уменьшить">-</button>
+                    <button class="zoom-btn" onclick="changeZoom(-0.25)">-</button>
                     <span class="zoom-indicator" id="zoom-value">100%</span>
-                    <button class="zoom-btn" onclick="changeZoom(0.25)" title="Увеличить">+</button>
-                    <button class="zoom-btn" onclick="resetZoom()" title="Сбросить масштаб">🔄</button>
+                    <button class="zoom-btn" onclick="changeZoom(0.25)">+</button>
+                    <button class="zoom-btn" onclick="resetZoom()">🔄</button>
                 </div>
-
-                <div style="display: flex; gap: 0.8rem; align-items: center;">
-                    <button class="btn-small" style="background: rgba(197, 160, 89, 0.2); color: var(--text-gold); border: 1px solid var(--border-gold);" onclick="toggleFullscreen()" id="fullscreen-btn" title="Развернуть на весь экран">🖎 На весь экран</button>
-                    <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-                </div>
+                <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
-            
             <div class="viewer-body" id="modal-viewer-body">
-                <div class="viewer-pages-wrapper" id="viewer-pages-wrapper">
-                    <div style="color: var(--text-muted); margin-top: 2rem;" id="viewer-loader">Загрузка страниц книги...</div>
-                </div>
+                <div class="viewer-pages-wrapper" id="viewer-pages-wrapper"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Edit Book Data -->
+    <!-- Modal Edit Book -->
     <div class="modal-overlay" id="edit-book-modal">
         <div class="edit-modal-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.8rem;">
@@ -783,16 +630,10 @@
             <form id="edit-book-form" onsubmit="handleSaveBookEdit(event)">
                 <input type="hidden" id="edit-book-id">
                 <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="form-group"><label>Название *</label><input type="text" id="edit-book-title" required></div>
+                    <div class="form-group"><label>Автор</label><input type="text" id="edit-book-author"></div>
                     <div class="form-group">
-                        <label for="edit-book-title">Название *</label>
-                        <input type="text" id="edit-book-title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-book-author">Автор</label>
-                        <input type="text" id="edit-book-author" placeholder="Имя автора...">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-book-category">Категория *</label>
+                        <label>Категория *</label>
                         <select id="edit-book-category" required onchange="toggleEditBookSubtype()">
                             <option value="Общественные писания">📜 Общественные писания</option>
                             <option value="Разрушение">Школа Разрушения</option>
@@ -802,28 +643,21 @@
                             <option value="Изменение">Школа Изменения</option>
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
-                            <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                            <option value="Доклады">📓 Доклады (Члены Коллегии/Профессоры/Смотритель)</option>
+                            <option value="Исследования">🔬 Исследования</option>
+                            <option value="Доклады">📓 Доклады</option>
                         </select>
                     </div>
                     <div class="form-group" id="edit-book-public-tag-box">
-                        <label for="edit-book-public-tag">Тип общественного писания</label>
+                        <label>Тип общественного писания</label>
                         <select id="edit-book-public-tag">
                             <option value="tes">📜 Книга из TES</option>
                             <option value="players">✍️ Книга, написанная игроками</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-book-append-file">Дозагрузить страницы (JPEG, PNG)</label>
-                        <input type="file" id="edit-book-append-file" multiple accept="image/jpeg,image/png">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-book-desc">Описание</label>
-                        <textarea id="edit-book-desc" rows="3"></textarea>
-                    </div>
+                    <div class="form-group"><label>Описание</label><textarea id="edit-book-desc" rows="3"></textarea></div>
                     <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.8rem;">
-                        <input type="checkbox" id="edit-book-is-advanced" style="width: 18px; height: 18px; cursor: pointer;">
-                        <label for="edit-book-is-advanced" style="cursor: pointer; font-size: 0.9rem; color: var(--text-gold);">Отметить как "Углубленные знания"</label>
+                        <input type="checkbox" id="edit-book-is-advanced" style="width: 18px; height: 18px;">
+                        <label for="edit-book-is-advanced">Отметить как "Углубленные знания"</label>
                     </div>
                 </div>
                 <button type="submit" class="btn-gold" id="edit-save-btn" style="width: 100%;">Сохранить Изменения</button>
@@ -831,7 +665,19 @@
         </div>
     </div>
 
-    <div id="toast" class="toast">Сообщение</div>
+    <!-- Modal Edit Services -->
+    <div class="modal-overlay" id="edit-services-modal">
+        <div class="edit-modal-container" style="max-width: 700px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.8rem;">
+                <h3 style="font-family: var(--font-title); color: var(--text-gold);">✏️ Редактирование Услуг и Расценок</h3>
+                <button onclick="closeEditServicesModal()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="edit-services-form-container"></div>
+            <button class="btn-gold" onclick="saveServicesEdit()" style="width: 100%; margin-top: 1.5rem;">Сохранить Прайс-лист</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
         let books = [];
@@ -843,8 +689,14 @@
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
 
-        const ROLE_PRIORITY = { 'keeper': 1, 'professor': 2, 'member': 3, 'guest': 4 };
+        const ROLE_TRANSLATE = {
+            'keeper': 'Смотритель',
+            'professor': 'Профессор',
+            'member': 'Член Коллегии',
+            'guest': 'Гость'
+        };
 
+        const ROLE_PRIORITY = { 'keeper': 1, 'professor': 2, 'member': 3, 'guest': 4 };
         let globalGuestPermissions = { "Общественные писания": true };
 
         const ALL_CATEGORIES = [
@@ -853,22 +705,126 @@
             "Алхимия", "Исследования", "Доклады"
         ];
 
-        let currentZoom = 1;
-        let isDragging = false;
-        let startX, startY, scrollLeft, scrollTop;
+        let collegeServicesData = {
+            scrolls: [
+                { level: '1 ур.', price: '3.000 септ' },
+                { level: '2 ур.', price: '9.000 септ' },
+                { level: '3 ур.', price: '30.000 септ' },
+                { level: '4 ур.', price: '70.000 септ' },
+                { level: '5 ур.', price: '130.000 септ' }
+            ],
+            staves: [
+                { level: '1 ур.', price: '5.000 септ' },
+                { level: '2 ур.', price: '15.000 септ' },
+                { level: '3 ур.', price: '40.000 септ' },
+                { level: '4 ур.', price: '80.000 септ' },
+                { level: '5 ур.', price: '180.000 септ' }
+            ],
+            crystals: [
+                { level: '1 ур.', price: '400 септ' },
+                { level: '2 ур.', price: '2.000 септ' },
+                { level: '3 ур.', price: '5.000 септ' },
+                { level: '4 ур.', price: '14.000 септ' },
+                { level: '5 ур.', price: '70.000 септ' }
+            ]
+        };
 
-        let currentOpenBookPages = [];
-        let loadedPagesCount = 0;
-        const PAGES_PER_CHUNK = 10;
+        let currentZoom = 1;
 
         document.addEventListener('DOMContentLoaded', () => {
             updateUIAuthState();
             fetchBooks();
+            fetchServices();
             if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
                 fetchAdminData();
             }
-            initViewerDragAndZoom();
         });
+
+        async function fetchServices() {
+            try {
+                const res = await fetch(`${WORKER_URL}/api/services`);
+                const data = await res.json();
+                if (data) collegeServicesData = data;
+                renderServices();
+            } catch (err) {
+                renderServices();
+            }
+        }
+
+        function renderServices() {
+            const container = document.getElementById('services-display-grid');
+            if (!container) return;
+            
+            const makeTableRows = (items) => items.map(i => `
+                <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);">
+                    <td style="padding: 0.5rem 0;">⚡ ${i.level}</td>
+                    <td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">${i.price}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">📜 Свитки</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.scrolls)}</table>
+                </div>
+                <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">🪄 Посохи</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.staves)}</table>
+                </div>
+                <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">💎 Кристаллы маны</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.crystals)}</table>
+                </div>
+            `;
+        }
+
+        function openEditServicesModal() {
+            const container = document.getElementById('edit-services-form-container');
+            let html = '';
+
+            const renderInputs = (categoryKey, title) => {
+                let catHtml = `<h4 style="color: var(--text-gold); margin: 1rem 0 0.5rem;">${title}</h4>`;
+                collegeServicesData[categoryKey].forEach((item, idx) => {
+                    catHtml += `
+                        <div style="display:flex; gap: 0.5rem; margin-bottom: 0.4rem; align-items:center;">
+                            <span style="min-width: 60px; font-size:0.85rem;">${item.level}</span>
+                            <input type="text" class="service-edit-input" data-cat="${categoryKey}" data-idx="${idx}" value="${item.price}" style="flex:1; padding:0.4rem;">
+                        </div>
+                    `;
+                });
+                return catHtml;
+            };
+
+            html += renderInputs('scrolls', '📜 Свитки');
+            html += renderInputs('staves', '🪄 Посохи');
+            html += renderInputs('crystals', '💎 Кристаллы маны');
+
+            container.innerHTML = html;
+            document.getElementById('edit-services-modal').classList.add('active');
+        }
+
+        function closeEditServicesModal() {
+            document.getElementById('edit-services-modal').classList.remove('active');
+        }
+
+        async function saveServicesEdit() {
+            const inputs = document.querySelectorAll('.service-edit-input');
+            inputs.forEach(inp => {
+                const cat = inp.getAttribute('data-cat');
+                const idx = parseInt(inp.getAttribute('data-idx'));
+                collegeServicesData[cat][idx].price = inp.value.trim();
+            });
+
+            await fetch(`${WORKER_URL}/api/services`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ services: collegeServicesData })
+            });
+
+            renderServices();
+            closeEditServicesModal();
+            showToast('✨ Прайс-лист услуг успешно обновлен!');
+        }
 
         async function fetchBooks() {
             try {
@@ -958,31 +914,6 @@
             });
         }
 
-        function initViewerDragAndZoom() {
-            const body = document.getElementById('modal-viewer-body');
-            body.addEventListener('mousedown', (e) => {
-                if (currentZoom > 1) {
-                    isDragging = true;
-                    startX = e.pageX - body.offsetLeft; startY = e.pageY - body.offsetTop;
-                    scrollLeft = body.scrollLeft; scrollTop = body.scrollTop;
-                }
-            });
-            body.addEventListener('mouseleave', () => { isDragging = false; });
-            body.addEventListener('mouseup', () => { isDragging = false; });
-            body.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                body.scrollLeft = scrollLeft - (e.pageX - body.offsetLeft - startX) * 1.5;
-                body.scrollTop = scrollTop - (e.pageY - body.offsetTop - startY) * 1.5;
-            });
-            body.addEventListener('wheel', (e) => {
-                if (e.ctrlKey) {
-                    e.preventDefault();
-                    changeZoom(e.deltaY < 0 ? 0.15 : -0.15);
-                }
-            }, { passive: false });
-        }
-
         function changeZoom(delta) { currentZoom = Math.min(Math.max(0.5, currentZoom + delta), 3.0); applyZoom(); }
         function resetZoom() { currentZoom = 1; applyZoom(); }
         function applyZoom() {
@@ -1001,6 +932,8 @@
             const guestPermContainer = document.getElementById('guest-permissions-container');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
+            const editServicesBtn = document.getElementById('edit-services-btn');
+
             const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
             const memberProfKeeperOptions = document.querySelectorAll('.member-prof-keeper-only');
 
@@ -1017,9 +950,10 @@
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
                     guestPermContainer.style.display = 'block';
+                    if (editServicesBtn) editServicesBtn.style.display = 'inline-block';
                     roleBadge.className = 'role-tag role-keeper';
                     roleBadge.innerText = 'Смотритель Архива';
-                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Архивариус</span>';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'block');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'professor') {
@@ -1027,6 +961,7 @@
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'none';
                     guestPermContainer.style.display = 'none';
+                    if (editServicesBtn) editServicesBtn.style.display = 'none';
                     roleBadge.className = 'role-tag role-prof';
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
@@ -1036,13 +971,15 @@
                     navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
-                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Авторизованный Гость</span>';
+                    if (editServicesBtn) editServicesBtn.style.display = 'none';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Гость</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
                 } else {
                     navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
+                    if (editServicesBtn) editServicesBtn.style.display = 'none';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-member">Член Коллегии</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
@@ -1055,6 +992,7 @@
                 authBlock.style.display = 'block';
                 adminDashboard.style.display = 'none';
                 guestPermContainer.style.display = 'none';
+                if (editServicesBtn) editServicesBtn.style.display = 'none';
                 accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Гость</span>';
                 profKeeperOptions.forEach(opt => opt.style.display = 'none');
                 memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
@@ -1088,6 +1026,17 @@
             const t = document.getElementById('toast');
             t.innerText = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3500);
+        }
+
+        function onCategoryFilterChange() {
+            const categoryVal = document.getElementById('category-filter').value;
+            const subfilterBox = document.getElementById('public-subfilter-box');
+            if (categoryVal === 'Общественные писания') {
+                subfilterBox.style.display = 'block';
+            } else {
+                subfilterBox.style.display = 'none';
+            }
+            renderCatalog();
         }
 
         async function handleLoginSubmit(e) {
@@ -1216,6 +1165,7 @@
             userKeys.forEach(key => {
                 const u = allUsersData[key];
                 const currentRole = u.role || 'member';
+                const roleRu = ROLE_TRANSLATE[currentRole] || currentRole;
                 const isShaldir = key === 'шалдир';
                 let actionHtml = isShaldir ? `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>` :
                     `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
@@ -1223,7 +1173,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
-                        <td><span class="role-tag role-${currentRole}">${currentRole}</span></td>
+                        <td><span class="role-tag role-${currentRole}">${roleRu}</span></td>
                         <td>
                             <select onchange="changeUserRole('${key}', this.value)">
                                 <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Гость</option>
@@ -1247,10 +1197,11 @@
             
             keys.forEach(key => {
                 const u = allDeletedUsersData[key];
+                const roleRu = ROLE_TRANSLATE[u.role] || u.role;
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong></td>
-                        <td><span class="role-tag role-${u.role}">${u.role}</span></td>
+                        <td><span class="role-tag role-${u.role}">${roleRu}</span></td>
                         <td><button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button></td>
                     </tr>
                 `;
@@ -1336,6 +1287,7 @@
                 const card = document.createElement('div');
                 card.className = 'book-card';
                 let adminBtnsHtml = (currentUser && currentUser.role === 'keeper') ? `
+                    <button class="btn-small btn-edit" onclick="openEditBookModal('${book.id}', event)">✏️ Редактировать</button>
                     <button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>
                 ` : '';
 
@@ -1354,6 +1306,77 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        async function openEditBookModal(bookId, event) {
+            if (event) event.stopPropagation();
+            const book = books.find(b => b.id === bookId);
+            if (!book) return;
+
+            document.getElementById('edit-book-id').value = book.id;
+            document.getElementById('edit-book-title').value = book.title || '';
+            document.getElementById('edit-book-author').value = book.author || '';
+            document.getElementById('edit-book-category').value = book.category || 'Общественные писания';
+            document.getElementById('edit-book-public-tag').value = book.publicTag || 'tes';
+            document.getElementById('edit-book-desc').value = book.description || '';
+            document.getElementById('edit-book-is-advanced').checked = !!book.isAdvanced;
+
+            toggleEditBookSubtype();
+            document.getElementById('edit-book-modal').classList.add('active');
+        }
+
+        function closeEditBookModal() {
+            document.getElementById('edit-book-modal').classList.remove('active');
+        }
+
+        function toggleAddBookSubtype() {
+            const cat = document.getElementById('book-category').value;
+            document.getElementById('add-book-public-tag-box').style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
+        }
+
+        function toggleEditBookSubtype() {
+            const cat = document.getElementById('edit-book-category').value;
+            document.getElementById('edit-book-public-tag-box').style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
+        }
+
+        async function handleSaveBookEdit(e) {
+            e.preventDefault();
+            const bookId = document.getElementById('edit-book-id').value;
+            const existingBook = books.find(b => b.id === bookId);
+            
+            let pages = [];
+            try {
+                const res = await fetch(`${WORKER_URL}/api/books/${bookId}`);
+                const fullBook = await res.json();
+                pages = fullBook.pages || [];
+            } catch (err) {
+                pages = existingBook ? existingBook.pages : [];
+            }
+
+            const updatedBook = {
+                id: bookId,
+                title: document.getElementById('edit-book-title').value.trim(),
+                author: document.getElementById('edit-book-author').value.trim(),
+                category: document.getElementById('edit-book-category').value,
+                publicTag: document.getElementById('edit-book-public-tag').value,
+                description: document.getElementById('edit-book-desc').value.trim(),
+                isAdvanced: document.getElementById('edit-book-is-advanced').checked,
+                pages: pages
+            };
+
+            const btn = document.getElementById('edit-save-btn');
+            btn.disabled = true; btn.innerText = '⏳ Сохранение...';
+
+            await fetch(`${WORKER_URL}/api/books`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedBook)
+            });
+
+            btn.disabled = false; btn.innerText = 'Сохранить Изменения';
+            closeEditBookModal();
+            showToast('✨ Труд успешно отредактирован!');
+            fetchBooks();
         }
 
         async function deleteBook(bookId, event) {
