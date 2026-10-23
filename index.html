@@ -1476,14 +1476,6 @@
             btn.innerText = '⏳ Сохранение...';
 
             try {
-                // Подтягиваем существующие страницы книги, чтобы они не стирались при редактировании названия/описания
-                const res = await fetch(`${WORKER_URL}/api/books/${bookId}`);
-                let pages = [];
-                if (res.ok) {
-                    const fullBook = await res.json();
-                    pages = fullBook.pages || [];
-                }
-
                 const updatedBook = {
                     id: bookId,
                     title: document.getElementById('edit-book-title').value.trim(),
@@ -1492,7 +1484,7 @@
                     publicTag: document.getElementById('edit-book-public-tag').value,
                     description: document.getElementById('edit-book-desc').value.trim(),
                     isAdvanced: document.getElementById('edit-book-is-advanced').checked,
-                    pages: pages
+                    pages: [] // Пустой массив, чтобы воркер не перезаписывал/не стирал текущие страницы в базе
                 };
 
                 const saveRes = await fetch(`${WORKER_URL}/api/books`, {
