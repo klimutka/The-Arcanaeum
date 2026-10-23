@@ -434,6 +434,7 @@
             <nav>
                 <button class="nav-btn active" id="nav-home-btn" onclick="switchTab('home')">🏰 Главная</button>
                 <button class="nav-btn" id="nav-catalog-btn" onclick="switchTab('catalog')">📚 Каталог Трудов</button>
+                <button class="nav-btn" id="nav-services-btn" onclick="switchTab('services')">📜 Услуги</button>
                 <button class="nav-btn" id="nav-login-btn" onclick="switchTab('login')">🔑 Вход</button>
             </nav>
         </div>
@@ -461,6 +462,7 @@
                     
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button class="btn-gold" id="home-catalog-btn" onclick="switchTab('catalog')">📚 Перейти к Каталогу</button>
+                        <button class="btn-gold" onclick="switchTab('services')">📜 Услуги Коллегии</button>
                         <button class="btn-gold" id="home-request-btn" onclick="switchTab('request')">🗝️ Запросить Доступ</button>
                     </div>
                 </div>
@@ -505,6 +507,42 @@
                 </div>
 
                 <div class="books-grid" id="books-container"></div>
+            </div>
+        </section>
+
+        <!-- SERVICES SECTION -->
+        <section id="services-section" class="section-panel">
+            <div class="skyrim-card">
+                <div class="section-header">
+                    <h2>📜 Услуги Коллегии Винтерхолда</h2>
+                </div>
+                <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                    Официальные услуги и ремесла, оказываемые мастерами и архивариусами Коллегии.
+                </p>
+
+                <div id="services-container" class="books-grid"></div>
+
+                <!-- Форма добавления услуги (Только для Архивариуса / Смотрителя) -->
+                <div id="add-service-container" style="display: none; border-top: 1px dashed var(--border-gold-dark); padding-top: 2rem; margin-top: 2rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem;">➕ Добавить Услугу Коллегии</h3>
+                    <form id="add-service-form" onsubmit="handleAddService(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="service-title">Название услуги *</label>
+                                <input type="text" id="service-title" required placeholder="Например: Зачарование предметов">
+                            </div>
+                            <div class="form-group">
+                                <label for="service-price">Стоимость / Условия</label>
+                                <input type="text" id="service-price" placeholder="Например: 500 септимов или редкий ингредиент">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="service-desc">Описание услуги *</label>
+                                <textarea id="service-desc" rows="3" required placeholder="Подробное описание того, что включает в себя услуга..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-gold" id="service-upload-btn">Добавить услугу</button>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -792,6 +830,7 @@
 
     <script>
         let books = [];
+        let services = [];
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
         let allUsersData = {};
         let allDeletedUsersData = {};
@@ -828,15 +867,15 @@
         let isDragging = false;
         let startX, startY, scrollLeft, scrollTop;
 
-        // Переменные для постраничного рендеринга книги
         let currentOpenBookPages = [];
         let loadedPagesCount = 0;
-        const PAGES_PER_CHUNK = 10; // Порция страниц для подгрузки
+        const PAGES_PER_CHUNK = 10;
 
         document.addEventListener('DOMContentLoaded', () => {
             listenGlobalGuestPermissions();
             updateUIAuthState();
             listenFirebaseBooks();
+            listenFirebaseServices();
             listenFirebaseUsers();
             listenFirebaseDeletedUsers();
             listenFirebaseRequests();
@@ -989,10 +1028,16 @@
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
             const guestPermContainer = document.getElementById('guest-permissions-container');
+            const addServiceContainer = document.getElementById('add-service-container');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
             const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
             const memberProfKeeperOptions = document.querySelectorAll('.member-prof-keeper-only');
+
+            const isKeeper = currentUser && currentUser.role === 'keeper';
+            if (addServiceContainer) {
+                addServiceContainer.style.display = isKeeper ? 'block' : 'none';
+            }
 
             if (currentUser) {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'none';
@@ -1008,8 +1053,8 @@
                     addBookContainer.style.display = 'block';
                     guestPermContainer.style.display = 'block';
                     roleBadge.className = 'role-tag role-keeper';
-                    roleBadge.innerText = 'Смотритель Арканеума';
-                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
+                    roleBadge.innerText = 'Смотритель Архива';
+                    accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Архивариус</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'block');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'professor') {
@@ -1035,7 +1080,7 @@
                     guestPermContainer.style.display = 'none';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-member">Член Коллегии</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
-                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'block'); // Члены Коллегии видят "Доклады"
+                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 }
             } else {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'inline-flex';
@@ -1062,6 +1107,10 @@
                 document.getElementById('nav-catalog-btn').classList.add('active');
                 document.getElementById('catalog-section').classList.add('active');
                 renderCatalog();
+            } else if (tabName === 'services') {
+                document.getElementById('nav-services-btn').classList.add('active');
+                document.getElementById('services-section').classList.add('active');
+                renderServices();
             } else if (tabName === 'request') {
                 document.getElementById('home-section').classList.remove('active');
                 document.getElementById('request-section').classList.add('active');
@@ -1536,6 +1585,102 @@
             });
         }
 
+        function listenFirebaseServices() {
+            db.ref('services').on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    services = Object.keys(data).map(key => ({
+                        id: key,
+                        title: data[key].title,
+                        price: data[key].price,
+                        description: data[key].description
+                    }));
+                } else {
+                    services = [];
+                }
+                renderServices();
+            });
+        }
+
+        function renderServices() {
+            const container = document.getElementById('services-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const isKeeper = currentUser && currentUser.role === 'keeper';
+
+            if (services.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 2rem; color: var(--text-muted); font-size: 0.95rem;">Услуги пока не добавлены Архивариусом.</div>`;
+                return;
+            }
+
+            services.forEach(serv => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+
+                let deleteBtnHtml = '';
+                if (isKeeper) {
+                    deleteBtnHtml = `<button class="btn-small btn-delete" onclick="deleteService('${serv.id}', event)">🗑️ Удалить услугу</button>`;
+                }
+
+                let priceHtml = serv.price ? `<div style="font-size: 0.85rem; color: var(--text-gold); font-weight: bold; margin-bottom: 0.5rem;">🪙 ${serv.price}</div>` : '';
+
+                card.innerHTML = `
+                    <div>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.4rem;">${serv.title}</h3>
+                        ${priceHtml}
+                        <p style="font-size:0.85rem; color: var(--text-muted); line-height: 1.6; margin-top: 0.5rem;">${serv.description}</p>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        ${deleteBtnHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function handleAddService(e) {
+            e.preventDefault();
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Архивариус может добавлять услуги!');
+                return;
+            }
+
+            const title = document.getElementById('service-title').value.trim();
+            const price = document.getElementById('service-price').value.trim();
+            const description = document.getElementById('service-desc').value.trim();
+
+            const serviceId = 'service-' + Date.now();
+
+            try {
+                await db.ref('services/' + serviceId).set({
+                    title: title,
+                    price: price,
+                    description: description
+                });
+
+                document.getElementById('add-service-form').reset();
+                showToast('✨ Услуга успешно добавлена!');
+            } catch (err) {
+                showToast('❌ Ошибка: ' + err.message);
+            }
+        }
+
+        function deleteService(serviceId, event) {
+            event.stopPropagation();
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Архивариус может удалять услуги!');
+                return;
+            }
+            if (confirm('Вы уверены, что хотите удалить эту услугу?')) {
+                db.ref('services/' + serviceId).remove().then(() => {
+                    showToast('🗑️ Услуга удалена.');
+                }).catch(err => {
+                    showToast('❌ Ошибка: ' + err.message);
+                });
+            }
+        }
+
         function onCategoryFilterChange() {
             const categoryVal = document.getElementById('category-filter').value;
             const publicBox = document.getElementById('public-subfilter-box');
@@ -1562,12 +1707,10 @@
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                // Проверка прав для Исследований (только профессора и смотритель)
                 if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
                     return false;
                 }
 
-                // Проверка прав для Докладов (члены коллегии, профессора, смотритель)
                 if (b.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
                     return false;
                 }
@@ -1770,13 +1913,11 @@
             const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
             if (targetBookMeta) {
-                // Проверка прав для Исследований (только профессора и смотритель)
                 if (targetBookMeta.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
                     showToast('🔒 Этот труд доступен только Профессорам и Смотрителю!');
                     return;
                 }
 
-                // Проверка прав для Докладов (члены коллегии, профессора, смотритель)
                 if (targetBookMeta.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
                     showToast('🔒 Этот труд доступен только Членам Коллегии, Профессорам и Смотрителю!');
                     return;
