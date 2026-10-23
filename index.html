@@ -8,27 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=MedievalSharp&family=Marcellus&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDK (Compat v9) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyACx9VYey9bQPraR8UytXS1EHyfdTWBlX4",
-            authDomain: "the-arcanaeum-7d02b.firebaseapp.com",
-            databaseURL: "https://the-arcanaeum-7d02b-default-rtdb.firebaseio.com",
-            projectId: "the-arcanaeum-7d02b",
-            storageBucket: "the-arcanaeum-7d02b.firebasestorage.app",
-            messagingSenderId: "659890744500",
-            appId: "1:659890744500:web:cf5555c1b172f7236dfbe1",
-            measurementId: "G-T2XLRJDV9D"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
+        // Укажите ссылку на ваш созданный Cloudflare Worker
+        const WORKER_URL = "https://arcanaeum-api.klimutka.workers.dev";
 
         async function hashPassword(password) {
             const encoder = new TextEncoder();
@@ -283,7 +266,7 @@
             transition: all 0.3s ease;
             position: relative;
         }
-        
+
         .viewer-container.fullscreen {
             max-width: 100vw !important;
             height: 100vh !important;
@@ -360,7 +343,7 @@
             transition: transform 0.15s ease-out;
             width: 100%;
         }
-        
+
         .book-page-img { 
             margin-bottom: 1.5rem; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -417,44 +400,6 @@
         }
         .sort-header:hover {
             color: #fff !important;
-        }
-
-        /* Стиль таблиц услуг */
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-        .service-card {
-            background: rgba(15, 18, 26, 0.9);
-            border: 1px solid var(--border-gold-dark);
-            border-radius: 4px;
-            padding: 1.5rem;
-        }
-        .service-card h3 {
-            font-family: var(--font-title);
-            color: var(--text-gold);
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid var(--border-gold-dark);
-            padding-bottom: 0.5rem;
-        }
-        .service-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-        .service-table tr {
-            border-bottom: 1px solid rgba(197, 160, 89, 0.15);
-        }
-        .service-table td {
-            padding: 0.6rem 0;
-        }
-        .service-table input[type="text"] {
-            padding: 0.3rem 0.5rem;
-            font-size: 0.85rem;
-            width: 110px;
-            text-align: right;
         }
     </style>
 </head>
@@ -553,40 +498,55 @@
             <div class="skyrim-card">
                 <div class="section-header">
                     <h2>📜 Услуги и Расценки Коллегии Винтерхолда</h2>
-                    <span id="services-edit-badge" class="role-tag role-keeper" style="display: none;">Архивариус: Режим редактирования</span>
                 </div>
                 <p style="margin-bottom: 2rem; color: var(--text-muted);">
                     Официальный прайс-лист на изготовление магических изделий и закупку кристаллов у мастеров Коллегии.
                 </p>
 
-                <!-- Контейнер для динамических таблиц услуг -->
-                <div id="services-grid" class="services-grid"></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+                    
+                    <!-- Свитки -->
+                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
+                            📜 Свитки <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">3.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">9.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">30.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
+                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">130.000 септ</td></tr>
+                        </table>
+                    </div>
 
-                <!-- Блок добавления новой позиции (Только для Смотрителя/Архивариуса) -->
-                <div id="add-service-panel" style="display: none; border-top: 1px dashed var(--border-gold-dark); padding-top: 1.5rem; margin-top: 2.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem; font-size: 1.1rem;">➕ Добавить новую услугу / предмет</h3>
-                    <form id="add-service-form" onsubmit="handleAddServiceItem(event)">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="new-service-category">Категория *</label>
-                                <select id="new-service-category" required>
-                                    <option value="📜 СВИТКИ (Изготовление на заказ)">📜 СВИТКИ (Изготовление на заказ)</option>
-                                    <option value="🪄 ПОСОХИ (Изготовление на заказ)">🪄 ПОСОХИ (Изготовление на заказ)</option>
-                                    <option value="💎 КРИСТАЛЛЫ МАНЫ (закуп)">💎 КРИСТАЛЛЫ МАНЫ (закуп)</option>
-                                    <option value="🔮 ПРОЧИЕ УСЛУГИ">🔮 ПРОЧИЕ УСЛУГИ</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="new-service-name">Название / Уровень *</label>
-                                <input type="text" id="new-service-name" required placeholder="Например: ⚡ 1 ур. или Изготовление зелья">
-                            </div>
-                            <div class="form-group">
-                                <label for="new-service-price">Стоимость *</label>
-                                <input type="text" id="new-service-price" required placeholder="Например: 3.000 септ">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-gold" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">Добавить в прайс-лист</button>
-                    </form>
+                    <!-- Посохи -->
+                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
+                            🪄 Посохи <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">15.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">40.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">80.000 септ</td></tr>
+                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">180.000 септ</td></tr>
+                        </table>
+                    </div>
+
+                    <!-- Кристаллы маны -->
+                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
+                            💎 Кристаллы маны <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Закуп</span>
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">400 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">2.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
+                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">14.000 септ</td></tr>
+                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
+                        </table>
+                    </div>
+
                 </div>
             </div>
         </section>
@@ -655,7 +615,7 @@
                         <span id="user-role-badge"></span>
                     </div>
 
-                    <!-- Смотритель: Глобальные настройки доступов по умолчанию для анонимных гостей -->
+                    <!-- Смотритель: Настройки доступов по умолчанию -->
                     <div id="guest-permissions-container" style="border-bottom: 1px dashed var(--border-gold-dark); padding-bottom: 2rem; margin-bottom: 2rem; display: none;">
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 0.5rem;">⚙️ Доступы для анонимных незарегистрированных Гостей</h3>
                         <p style="font-size: 0.85rem; color: var(--text-muted);">Отметьте категории, доступные неавторизованным людям с улицы:</p>
@@ -875,7 +835,6 @@
 
     <script>
         let books = [];
-        let servicesData = {};
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
         let allUsersData = {};
         let allDeletedUsersData = {};
@@ -884,50 +843,15 @@
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
 
-        const ROLE_PRIORITY = {
-            'keeper': 1,
-            'professor': 2,
-            'member': 3,
-            'guest': 4
-        };
+        const ROLE_PRIORITY = { 'keeper': 1, 'professor': 2, 'member': 3, 'guest': 4 };
 
-        let globalGuestPermissions = {
-            "Общественные писания": true
-        };
+        let globalGuestPermissions = { "Общественные писания": true };
 
         const ALL_CATEGORIES = [
-            "Общественные писания",
-            "Разрушение",
-            "Восстановление",
-            "Колдовство",
-            "Иллюзия",
-            "Изменение",
-            "Зачарование",
-            "Алхимия",
-            "Исследования",
-            "Доклады"
+            "Общественные писания", "Разрушение", "Восстановление",
+            "Колдовство", "Иллюзия", "Изменение", "Зачарование",
+            "Алхимия", "Исследования", "Доклады"
         ];
-
-        // Стартовый дефолтный пресет услуг, если БД пуста
-        const INITIAL_SERVICES = {
-            "s1": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 1 ур.", price: "3.000 септ", order: 1 },
-            "s2": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 2 ур.", price: "9.000 септ", order: 2 },
-            "s3": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 3 ур.", price: "30.000 септ", order: 3 },
-            "s4": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 4 ур.", price: "70.000 септ", order: 4 },
-            "s5": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "🔥 5 ур.", price: "130.000 септ", order: 5 },
-
-            "st1": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 1 ур.", price: "5.000 септ", order: 1 },
-            "st2": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 2 ур.", price: "15.000 септ", order: 2 },
-            "st3": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 3 ур.", price: "40.000 септ", order: 3 },
-            "st4": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 4 ур.", price: "80.000 септ", order: 4 },
-            "st5": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🔥 5 ур.", price: "180.000 септ", order: 5 },
-
-            "m1": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 1 ур.", price: "400 септ", order: 1 },
-            "m2": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 2 ур.", price: "2.000 септ", order: 2 },
-            "m3": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 3 ур.", price: "5.000 септ", order: 3 },
-            "m4": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 4 ур.", price: "14.000 септ", order: 4 },
-            "m5": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "🔥 5 ур.", price: "70.000 септ", order: 5 }
-        };
 
         let currentZoom = 1;
         let isDragging = false;
@@ -938,25 +862,40 @@
         const PAGES_PER_CHUNK = 10;
 
         document.addEventListener('DOMContentLoaded', () => {
-            listenGlobalGuestPermissions();
             updateUIAuthState();
-            listenFirebaseBooks();
-            listenFirebaseServices();
-            listenFirebaseUsers();
-            listenFirebaseDeletedUsers();
-            listenFirebaseRequests();
+            fetchBooks();
+            if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
+                fetchAdminData();
+            }
             initViewerDragAndZoom();
         });
 
-        function listenGlobalGuestPermissions() {
-            db.ref('guest_permissions').on('value', snapshot => {
-                const val = snapshot.val();
-                if (val) {
-                    globalGuestPermissions = val;
-                }
-                renderGlobalGuestPermissionCheckboxes();
+        async function fetchBooks() {
+            try {
+                const res = await fetch(`${WORKER_URL}/api/books`);
+                books = await res.json();
                 renderCatalog();
-            });
+            } catch (err) {
+                console.error("Failed to load books:", err);
+            }
+        }
+
+        async function fetchAdminData() {
+            try {
+                const res = await fetch(`${WORKER_URL}/api/admin/data`);
+                const data = await res.json();
+                allUsersData = data.users || {};
+                allDeletedUsersData = data.deletedUsers || {};
+                allRequestsData = data.requests || {};
+                globalGuestPermissions = data.guestPermissions || {};
+
+                renderGlobalGuestPermissionCheckboxes();
+                renderUsersTable();
+                renderRequestsTable();
+                renderDeletedUsersTable();
+            } catch (err) {
+                console.error("Failed to load admin data:", err);
+            }
         }
 
         function renderGlobalGuestPermissionCheckboxes() {
@@ -975,21 +914,21 @@
             });
         }
 
-        function saveGlobalGuestPermissions() {
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Смотритель может менять настройки!');
-                return;
-            }
-
+        async function saveGlobalGuestPermissions() {
+            if (!currentUser || currentUser.role !== 'keeper') return showToast('⛔ Только Смотритель может менять настройки!');
             let newPerms = {};
             document.querySelectorAll('.global-guest-perm-check').forEach(chk => {
-                const cat = chk.getAttribute('data-category');
-                newPerms[cat] = chk.checked;
+                newPerms[chk.getAttribute('data-category')] = chk.checked;
             });
 
-            db.ref('guest_permissions').set(newPerms).then(() => {
-                showToast('✨ Настройки доступов для анонимных Гостей сохранены!');
+            await fetch(`${WORKER_URL}/api/settings/guest-permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ permissions: newPerms })
             });
+            globalGuestPermissions = newPerms;
+            showToast('✨ Настройки доступов для анонимных Гостей сохранены!');
+            renderCatalog();
         }
 
         function compressImage(file, maxWidth = 1500, maxHeight = 2000, quality = 0.7) {
@@ -1000,9 +939,7 @@
                     const img = new Image();
                     img.src = event.target.result;
                     img.onload = () => {
-                        let width = img.width;
-                        let height = img.height;
-
+                        let width = img.width, height = img.height;
                         if (width > maxWidth || height > maxHeight) {
                             if (width / height > maxWidth / maxHeight) {
                                 height = Math.round((height * maxWidth) / width);
@@ -1012,13 +949,9 @@
                                 height = maxHeight;
                             }
                         }
-
                         const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', quality));
                     };
                 };
@@ -1027,62 +960,34 @@
 
         function initViewerDragAndZoom() {
             const body = document.getElementById('modal-viewer-body');
-
             body.addEventListener('mousedown', (e) => {
                 if (currentZoom > 1) {
                     isDragging = true;
-                    startX = e.pageX - body.offsetLeft;
-                    startY = e.pageY - body.offsetTop;
-                    scrollLeft = body.scrollLeft;
-                    scrollTop = body.scrollTop;
+                    startX = e.pageX - body.offsetLeft; startY = e.pageY - body.offsetTop;
+                    scrollLeft = body.scrollLeft; scrollTop = body.scrollTop;
                 }
             });
-
             body.addEventListener('mouseleave', () => { isDragging = false; });
             body.addEventListener('mouseup', () => { isDragging = false; });
-
             body.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 e.preventDefault();
-                const x = e.pageX - body.offsetLeft;
-                const y = e.pageY - body.offsetTop;
-                const walkX = (x - startX) * 1.5;
-                const walkY = (y - startY) * 1.5;
-                body.scrollLeft = scrollLeft - walkX;
-                body.scrollTop = scrollTop - walkY;
+                body.scrollLeft = scrollLeft - (e.pageX - body.offsetLeft - startX) * 1.5;
+                body.scrollTop = scrollTop - (e.pageY - body.offsetTop - startY) * 1.5;
             });
-
             body.addEventListener('wheel', (e) => {
                 if (e.ctrlKey) {
                     e.preventDefault();
-                    if (e.deltaY < 0) {
-                        changeZoom(0.15);
-                    } else {
-                        changeZoom(-0.15);
-                    }
+                    changeZoom(e.deltaY < 0 ? 0.15 : -0.15);
                 }
             }, { passive: false });
         }
 
-        function changeZoom(delta) {
-            currentZoom = Math.min(Math.max(0.5, currentZoom + delta), 3.0);
-            applyZoom();
-        }
-
-        function resetZoom() {
-            currentZoom = 1;
-            applyZoom();
-        }
-
+        function changeZoom(delta) { currentZoom = Math.min(Math.max(0.5, currentZoom + delta), 3.0); applyZoom(); }
+        function resetZoom() { currentZoom = 1; applyZoom(); }
         function applyZoom() {
-            const wrapper = document.getElementById('viewer-pages-wrapper');
-            const indicator = document.getElementById('zoom-value');
-            if (wrapper) {
-                wrapper.style.transform = `scale(${currentZoom})`;
-            }
-            if (indicator) {
-                indicator.innerText = `${Math.round(currentZoom * 100)}%`;
-            }
+            document.getElementById('viewer-pages-wrapper').style.transform = `scale(${currentZoom})`;
+            document.getElementById('zoom-value').innerText = `${Math.round(currentZoom * 100)}%`;
         }
 
         function updateUIAuthState() {
@@ -1094,16 +999,10 @@
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
             const guestPermContainer = document.getElementById('guest-permissions-container');
-            const addServicePanel = document.getElementById('add-service-panel');
-            const servicesEditBadge = document.getElementById('services-edit-badge');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
             const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
             const memberProfKeeperOptions = document.querySelectorAll('.member-prof-keeper-only');
-
-            const isKeeper = currentUser && currentUser.role === 'keeper';
-            if (addServicePanel) addServicePanel.style.display = isKeeper ? 'block' : 'none';
-            if (servicesEditBadge) servicesEditBadge.style.display = isKeeper ? 'inline-block' : 'none';
 
             if (currentUser) {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'none';
@@ -1160,7 +1059,6 @@
                 profKeeperOptions.forEach(opt => opt.style.display = 'none');
                 memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
             }
-            renderServices();
         }
 
         function switchTab(tabName) {
@@ -1177,7 +1075,6 @@
             } else if (tabName === 'services') {
                 document.getElementById('nav-services-btn').classList.add('active');
                 document.getElementById('services-section').classList.add('active');
-                renderServices();
             } else if (tabName === 'request') {
                 document.getElementById('home-section').classList.remove('active');
                 document.getElementById('request-section').classList.add('active');
@@ -1189,8 +1086,7 @@
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.display = 'block';
+            t.innerText = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3500);
         }
 
@@ -1200,56 +1096,39 @@
             const password = document.getElementById('login-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
             const passwordHash = await hashPassword(password);
-            const email = dbKey + "@arcanaeum.local";
 
             try {
-                try {
-                    await auth.signInWithEmailAndPassword(email, passwordHash);
-                } catch (signInErr) {
-                    const snapshot = await db.ref('users/' + dbKey).once('value');
-                    const userData = snapshot.val();
-                    if (userData && userData.password === passwordHash) {
-                        try {
-                            const cred = await auth.createUserWithEmailAndPassword(email, passwordHash);
-                            await db.ref('users/' + dbKey + '/uid').set(cred.user.uid);
-                        } catch (createErr) {
-                            console.error("Auth create error:", createErr);
-                        }
-                    } else {
-                        throw new Error('Неверные данные');
-                    }
-                }
+                const res = await fetch(`${WORKER_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dbKey, passwordHash })
+                });
+                
+                if (!res.ok) throw new Error('Неверные данные');
 
-                const snapshot = await db.ref('users/' + dbKey).once('value');
-                const userData = snapshot.val();
-                if (userData) {
-                    currentUser = { 
-                        key: dbKey, 
-                        name: userData.name, 
-                        role: userData.role || 'member',
-                        permissions: userData.permissions || {}
-                    };
-                    sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
-                    updateUIAuthState();
-                    showToast(`✨ Добро пожаловать, ${userData.name}!`);
-                    switchTab('catalog');
-                } else {
-                    showToast('❌ Данные пользователя не найдены.');
-                }
+                const userData = await res.json();
+                currentUser = { 
+                    key: userData.key, 
+                    name: userData.name, 
+                    role: userData.role || 'member',
+                    permissions: userData.permissions || {}
+                };
+                sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
+                updateUIAuthState();
+                if (currentUser.role === 'keeper' || currentUser.role === 'professor') fetchAdminData();
+                showToast(`✨ Добро пожаловать, ${userData.name}!`);
+                switchTab('catalog');
             } catch (err) {
-                console.error(err);
                 showToast('❌ Неверное имя персонажа или пароль!');
             }
         }
 
         function userLogout() {
-            auth.signOut().then(() => {
-                currentUser = null;
-                sessionStorage.removeItem('skyrim_user');
-                updateUIAuthState();
-                showToast('👋 Вы вышли из системы.');
-                switchTab('home');
-            });
+            currentUser = null;
+            sessionStorage.removeItem('skyrim_user');
+            updateUIAuthState();
+            showToast('👋 Вы вышли из системы.');
+            switchTab('home');
         }
 
         async function handleRequestSubmit(e) {
@@ -1258,31 +1137,21 @@
             const password = document.getElementById('req-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
 
-            if (allUsersData[dbKey]) {
-                showToast('⛔ Этот пользователь уже имеет доступ к библиотеке!');
-                return;
-            }
-
             const passwordHash = await hashPassword(password);
-            const reqData = {
-                name: charName,
-                password: passwordHash,
-                reason: document.getElementById('req-reason').value,
-                status: 'pending'
-            };
-
-            db.ref('requests/' + dbKey).set(reqData).then(() => {
-                document.getElementById('access-request-form').reset();
-                showToast('📜 Заявка отправлена!');
-                switchTab('home');
+            await fetch(`${WORKER_URL}/api/requests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    key: dbKey,
+                    name: charName,
+                    password: passwordHash,
+                    reason: document.getElementById('req-reason').value
+                })
             });
-        }
 
-        function listenFirebaseRequests() {
-            db.ref('requests').on('value', snapshot => {
-                allRequestsData = snapshot.val() || {};
-                renderRequestsTable();
-            });
+            document.getElementById('access-request-form').reset();
+            showToast('📜 Заявка отправлена!');
+            switchTab('home');
         }
 
         function renderRequestsTable() {
@@ -1291,10 +1160,7 @@
             tbody.innerHTML = '';
 
             const keys = Object.keys(allRequestsData);
-            const pendingKeys = keys.filter(key => {
-                const r = allRequestsData[key];
-                return r.status === 'pending' && !allUsersData[key];
-            });
+            const pendingKeys = keys.filter(key => allRequestsData[key].status === 'pending');
 
             if (pendingKeys.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет новых заявок</td></tr>';
@@ -1321,28 +1187,9 @@
             });
         }
 
-        function listenFirebaseUsers() {
-            db.ref('users').on('value', snapshot => {
-                allUsersData = snapshot.val() || {};
-                
-                if (currentUser && allUsersData[currentUser.key]) {
-                    currentUser.permissions = allUsersData[currentUser.key].permissions || {};
-                    currentUser.role = allUsersData[currentUser.key].role || 'member';
-                    sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
-                }
-
-                renderUsersTable();
-                renderRequestsTable();
-            });
-        }
-
         function toggleUserSort(field) {
-            if (userSortField === field) {
-                userSortDirection = (userSortDirection === 'asc') ? 'desc' : 'asc';
-            } else {
-                userSortField = field;
-                userSortDirection = 'asc';
-            }
+            userSortDirection = (userSortField === field) ? (userSortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
+            userSortField = field;
             renderUsersTable();
         }
 
@@ -1351,34 +1198,14 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const iconName = document.getElementById('sort-icon-name');
-            const iconRole = document.getElementById('sort-icon-role');
-            if (iconName) iconName.innerText = userSortField === 'name' ? (userSortDirection === 'asc' ? '▲' : '▼') : '↕️';
-            if (iconRole) iconRole.innerText = userSortField === 'role' ? (userSortDirection === 'asc' ? '▲' : '▼') : '↕️';
-
             const searchVal = document.getElementById('user-search-input') ? document.getElementById('user-search-input').value.toLowerCase() : '';
-            let userKeys = Object.keys(allUsersData);
+            let userKeys = Object.keys(allUsersData).filter(key => allUsersData[key].name.toLowerCase().includes(searchVal));
 
-            userKeys = userKeys.filter(key => {
-                const u = allUsersData[key];
-                return u.name.toLowerCase().includes(searchVal);
-            });
-
-            userKeys.sort((aKey, bKey) => {
-                const uA = allUsersData[aKey];
-                const uB = allUsersData[bKey];
-
-                if (userSortField === 'name') {
-                    const comp = uA.name.localeCompare(uB.name, 'ru');
-                    return userSortDirection === 'asc' ? comp : -comp;
-                } else if (userSortField === 'role') {
-                    const pA = ROLE_PRIORITY[uA.role || 'member'] || 99;
-                    const pB = ROLE_PRIORITY[uB.role || 'member'] || 99;
-                    if (pA !== pB) {
-                        return userSortDirection === 'asc' ? pA - pB : pB - pA;
-                    }
-                    return uA.name.localeCompare(uB.name, 'ru');
-                }
+            userKeys.sort((a, b) => {
+                const uA = allUsersData[a], uB = allUsersData[b];
+                if (userSortField === 'name') return userSortDirection === 'asc' ? uA.name.localeCompare(uB.name, 'ru') : uB.name.localeCompare(uA.name, 'ru');
+                const pA = ROLE_PRIORITY[uA.role || 'member'] || 99, pB = ROLE_PRIORITY[uB.role || 'member'] || 99;
+                return userSortDirection === 'asc' ? pA - pB : pB - pA;
             });
 
             if (userKeys.length === 0) {
@@ -1386,119 +1213,28 @@
                 return;
             }
 
-            const isCurrentProfessor = currentUser && currentUser.role === 'professor';
-            const isCurrentKeeper = currentUser && currentUser.role === 'keeper';
-
             userKeys.forEach(key => {
                 const u = allUsersData[key];
                 const currentRole = u.role || 'member';
-                const isTargetKeeper = currentRole === 'keeper';
                 const isShaldir = key === 'шалдир';
-                const isSelf = currentUser && currentUser.key === key;
-
-                let actionHtml = '';
-                let roleSelectHtml = '';
-
-                let permBtnHtml = '';
-                if (currentRole === 'guest' && isCurrentKeeper) {
-                    permBtnHtml = `<button class="btn-perm" onclick="openUserPermModal('${key}')">⚙️ Доступы</button>`;
-                }
-
-                if (isShaldir) {
-                    roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
-                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
-                } else if (isCurrentProfessor && isTargetKeeper) {
-                    roleSelectHtml = `<span class="role-tag role-keeper">Смотритель</span>`;
-                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Защищено</span>`;
-                } else if (isCurrentProfessor && isSelf) {
-                    roleSelectHtml = `<span class="role-tag role-prof">Профессор (Вы)</span>`;
-                    actionHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">🔒 Себя нельзя</span>`;
-                } else {
-                    actionHtml = `${permBtnHtml}<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
-
-                    roleSelectHtml = `
-                        <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.3rem; font-size: 0.8rem;">
-                            <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Гость</option>
-                            <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
-                            <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
-                            <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
-                        </select>
-                    `;
-                }
-
-                let badgeClass = 'role-member';
-                let roleLabel = 'Член Коллегии';
-
-                if (currentRole === 'keeper') { badgeClass = 'role-keeper'; roleLabel = 'Смотритель'; }
-                else if (currentRole === 'professor') { badgeClass = 'role-prof'; roleLabel = 'Профессор'; }
-                else if (currentRole === 'guest') { badgeClass = 'role-guest'; roleLabel = 'Гость'; }
+                let actionHtml = isShaldir ? `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>` :
+                    `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
 
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
-                        <td><span class="role-tag ${badgeClass}">${roleLabel}</span></td>
-                        <td>${roleSelectHtml}</td>
+                        <td><span class="role-tag role-${currentRole}">${currentRole}</span></td>
+                        <td>
+                            <select onchange="changeUserRole('${key}', this.value)">
+                                <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Гость</option>
+                                <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
+                                <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
+                                <option value="keeper" ${currentRole === 'keeper' ? 'selected' : ''}>Смотритель</option>
+                            </select>
+                        </td>
                         <td>${actionHtml}</td>
                     </tr>
                 `;
-            });
-        }
-
-        function openUserPermModal(dbKey) {
-            const user = allUsersData[dbKey];
-            if (!user) return;
-
-            document.getElementById('user-perm-target-key').value = dbKey;
-            document.getElementById('user-perm-title').innerText = `⚙️ Доступы для гостя: ${user.name}`;
-
-            const container = document.getElementById('user-perm-checkboxes-container');
-            container.innerHTML = '';
-
-            const userPerms = user.permissions || {};
-
-            ALL_CATEGORIES.forEach(cat => {
-                const isChecked = !!userPerms[cat];
-                container.innerHTML += `
-                    <label style="display:flex; align-items:center; gap: 0.5rem; cursor:pointer; color: var(--text-light); font-size:0.85rem;">
-                        <input type="checkbox" class="user-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
-                        ${cat}
-                    </label>
-                `;
-            });
-
-            document.getElementById('user-perm-modal').classList.add('active');
-        }
-
-        function closeUserPermModal() {
-            document.getElementById('user-perm-modal').classList.remove('active');
-        }
-
-        function saveUserGuestPermissions() {
-            const dbKey = document.getElementById('user-perm-target-key').value;
-            if (!dbKey) return;
-
-            let newPerms = {};
-            document.querySelectorAll('.user-perm-check').forEach(chk => {
-                const cat = chk.getAttribute('data-category');
-                newPerms[cat] = chk.checked;
-            });
-
-            db.ref('users/' + dbKey + '/permissions').set(newPerms).then(() => {
-                if (allUsersData[dbKey]) {
-                    allUsersData[dbKey].permissions = newPerms;
-                }
-                showToast('✨ Персональные доступы гостя успешно сохранены!');
-                closeUserPermModal();
-                renderCatalog();
-            }).catch(err => {
-                showToast('❌ Ошибка сохранения: ' + err.message);
-            });
-        }
-
-        function listenFirebaseDeletedUsers() {
-            db.ref('deleted_users').on('value', snapshot => {
-                allDeletedUsersData = snapshot.val() || {};
-                renderDeletedUsersTable();
             });
         }
 
@@ -1506,289 +1242,63 @@
             const tbody = document.getElementById('deleted-users-tbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-
-            const searchVal = document.getElementById('deleted-user-search-input') ? document.getElementById('deleted-user-search-input').value.toLowerCase() : '';
-            let keys = Object.keys(allDeletedUsersData);
-
-            keys = keys.filter(key => {
-                const u = allDeletedUsersData[key];
-                return u.name.toLowerCase().includes(searchVal);
-            });
-
-            if (keys.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет удаленных пользователей</td></tr>';
-                return;
-            }
-
+            const keys = Object.keys(allDeletedUsersData);
+            if (keys.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет удаленных пользователей</td></tr>';
+            
             keys.forEach(key => {
                 const u = allDeletedUsersData[key];
-                const currentRole = u.role || 'member';
-
-                let badgeClass = 'role-member';
-                let roleLabel = 'Член Коллегии';
-
-                if (currentRole === 'keeper') { 
-                    badgeClass = 'role-keeper'; 
-                    roleLabel = 'Смотритель'; 
-                } else if (currentRole === 'professor') { 
-                    badgeClass = 'role-prof'; 
-                    roleLabel = 'Профессор'; 
-                } else if (currentRole === 'guest') { 
-                    badgeClass = 'role-guest'; 
-                    roleLabel = 'Гость'; 
-                }
-
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${u.name}</strong></td>
-                        <td><span class="role-tag ${badgeClass}">${roleLabel}</span></td>
-                        <td>
-                            <button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button>
-                        </td>
+                        <td><span class="role-tag role-${u.role}">${u.role}</span></td>
+                        <td><button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button></td>
                     </tr>
                 `;
             });
         }
 
         async function changeUserRole(dbKey, newRole) {
-            if (dbKey === 'шалдир') {
-                showToast('⛔ Аккаунт "Шалдир" защищен от изменения роли!');
-                renderUsersTable();
-                return;
-            }
-            if (currentUser && currentUser.role === 'professor' && currentUser.key === dbKey) {
-                showToast('⛔ Вы не можете менять роль самому себе!');
-                renderUsersTable();
-                return;
-            }
-            if (currentUser && currentUser.role === 'professor' && newRole === 'keeper') {
-                showToast('⛔ Профессор не может назначать роль Смотрителя!');
-                renderUsersTable();
-                return;
-            }
-
-            await db.ref('users/' + dbKey + '/role').set(newRole);
-            showToast(`✨ Роль пользователя обновлена!`);
+            await fetch(`${WORKER_URL}/api/users/role`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: dbKey, role: newRole })
+            });
+            fetchAdminData();
+            showToast('✨ Роль обновлена!');
         }
 
         async function deleteUser(dbKey) {
-            if (dbKey === 'шалдир') {
-                showToast('⛔ Этот аккаунт защищен от удаления!');
-                return;
-            }
-            
-            const targetUser = allUsersData[dbKey];
-            if (currentUser && currentUser.role === 'professor' && targetUser && targetUser.role === 'keeper') {
-                showToast('⛔ Профессор не может удалять Смотрителей!');
-                return;
-            }
-
-            if (confirm('Вы уверены, что хотите отозвать доступ и удалить этого пользователя?')) {
-                db.ref('deleted_users/' + dbKey).set(targetUser).then(() => {
-                    db.ref('users/' + dbKey).remove().then(() => {
-                        showToast('🗑️ Пользователь перемещен в удаленные.');
-                    });
-                }).catch(err => {
-                    showToast('❌ Ошибка: ' + err.message);
-                });
+            if (confirm('Удалить пользователя?')) {
+                await fetch(`${WORKER_URL}/api/users/${dbKey}`, { method: 'DELETE' });
+                fetchAdminData();
+                showToast('🗑️ Пользователь удален.');
             }
         }
 
         async function restoreUser(dbKey) {
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Смотритель может восстанавливать пользователей!');
-                return;
-            }
-
-            const targetUser = allDeletedUsersData[dbKey];
-            if (targetUser) {
-                await db.ref('users/' + dbKey).set(targetUser);
-                await db.ref('deleted_users/' + dbKey).remove();
-                showToast(`✨ Пользователь ${targetUser.name} восстановлен!`);
-            }
+            await fetch(`${WORKER_URL}/api/users/restore/${dbKey}`, { method: 'POST' });
+            fetchAdminData();
+            showToast('✨ Пользователь восстановлен!');
         }
 
         async function approveUser(dbKey, roleToAssign) {
-            const req = allRequestsData[dbKey];
-            if (req) {
-                try {
-                    await db.ref('users/' + dbKey).set({
-                        name: req.name,
-                        password: req.password,
-                        role: roleToAssign,
-                        permissions: {}
-                    });
-
-                    db.ref('requests/' + dbKey + '/status').set('approved');
-                    showToast(`✅ Заявка для ${req.name} одобрена!`);
-                } catch (err) {
-                    showToast('❌ Ошибка: ' + err.message);
-                }
-            }
+            await fetch(`${WORKER_URL}/api/requests/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: dbKey, role: roleToAssign })
+            });
+            fetchAdminData();
+            showToast('✅ Заявка одобрена!');
         }
 
-        function rejectUser(dbKey) {
-            db.ref('requests/' + dbKey + '/status').set('rejected');
+        async function rejectUser(dbKey) {
+            await fetch(`${WORKER_URL}/api/requests/reject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: dbKey })
+            });
+            fetchAdminData();
             showToast('❌ Заявка отклонена.');
-        }
-
-        function listenFirebaseBooks() {
-            db.ref('books').on('value', snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    books = Object.keys(data).map(key => ({
-                        id: key,
-                        title: data[key].title,
-                        author: data[key].author,
-                        category: data[key].category,
-                        publicTag: data[key].publicTag || 'tes',
-                        description: data[key].description,
-                        isAdvanced: data[key].isAdvanced
-                    }));
-                } else {
-                    books = [];
-                }
-                renderCatalog();
-            });
-        }
-
-        // --- ЛОГИКА ДИНАМИЧЕСКИХ УСЛУГ И ПРАЙС-ЛИСТОВ ---
-        function listenFirebaseServices() {
-            db.ref('services').on('value', snapshot => {
-                const data = snapshot.val();
-                if (!data) {
-                    // Инициализация стартовым списком, если база пустая
-                    db.ref('services').set(INITIAL_SERVICES);
-                } else {
-                    servicesData = data;
-                    renderServices();
-                }
-            });
-        }
-
-        function renderServices() {
-            const container = document.getElementById('services-grid');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const isKeeper = currentUser && currentUser.role === 'keeper';
-
-            // Группируем услуги по категориям
-            const categories = {};
-            Object.keys(servicesData).forEach(id => {
-                const item = servicesData[id];
-                const cat = item.category || '🔮 ПРОЧИЕ УСЛУГИ';
-                if (!categories[cat]) categories[cat] = [];
-                categories[cat].push({ id, ...item });
-            });
-
-            // Сортируем внутри категорий по полю order
-            Object.keys(categories).forEach(cat => {
-                categories[cat].sort((a, b) => (a.order || 99) - (b.order || 99));
-            });
-
-            if (Object.keys(categories).length === 0) {
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color: var(--text-muted);">Прайс-лист пуст.</div>`;
-                return;
-            }
-
-            Object.keys(categories).forEach(catName => {
-                const card = document.createElement('div');
-                card.className = 'service-card';
-
-                let rowsHtml = '';
-                categories[catName].forEach(item => {
-                    if (isKeeper) {
-                        rowsHtml += `
-                            <tr>
-                                <td style="padding: 0.5rem 0;"><strong>${item.name}</strong></td>
-                                <td style="text-align: right; padding: 0.5rem 0;">
-                                    <div style="display: inline-flex; gap: 0.3rem; align-items: center;">
-                                        <input type="text" id="price-input-${item.id}" value="${item.price}">
-                                        <button class="btn-small btn-approve" onclick="updateServicePrice('${item.id}')" title="Сохранить цену">💾</button>
-                                        <button class="btn-small btn-reject" onclick="deleteServiceItem('${item.id}')" title="Удалить позицию">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    } else {
-                        rowsHtml += `
-                            <tr>
-                                <td style="padding: 0.5rem 0;">${item.name}</td>
-                                <td style="text-align: right; color: var(--text-gold); font-weight: bold; padding: 0.5rem 0;">${item.price}</td>
-                            </tr>
-                        `;
-                    }
-                });
-
-                card.innerHTML = `
-                    <h3>${catName}</h3>
-                    <table class="service-table">
-                        <tbody>
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        async function updateServicePrice(id) {
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Архивариус может изменять цены!');
-                return;
-            }
-            const newPrice = document.getElementById(`price-input-${id}`).value.trim();
-            if (!newPrice) return;
-
-            await db.ref(`services/${id}/price`).set(newPrice);
-            showToast('✨ Цена обновлена!');
-        }
-
-        async function deleteServiceItem(id) {
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Архивариус может удалять услуги!');
-                return;
-            }
-            if (confirm('Удалить эту позицию из прайс-листа?')) {
-                await db.ref(`services/${id}`).remove();
-                showToast('🗑️ Позиция удалена.');
-            }
-        }
-
-        async function handleAddServiceItem(e) {
-            e.preventDefault();
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Архивариус может добавлять услуги!');
-                return;
-            }
-
-            const category = document.getElementById('new-service-category').value;
-            const name = document.getElementById('new-service-name').value.trim();
-            const price = document.getElementById('new-service-price').value.trim();
-
-            const newItemId = 'serv_' + Date.now();
-            await db.ref(`services/${newItemId}`).set({
-                category: category,
-                name: name,
-                price: price,
-                order: Date.now()
-            });
-
-            document.getElementById('add-service-form').reset();
-            showToast('✨ Новая услуга успешно добавлена!');
-        }
-
-        function onCategoryFilterChange() {
-            const categoryVal = document.getElementById('category-filter').value;
-            const publicBox = document.getElementById('public-subfilter-box');
-            
-            if (categoryVal === 'Общественные писания') {
-                publicBox.style.display = 'block';
-            } else {
-                publicBox.style.display = 'none';
-            }
-            renderCatalog();
         }
 
         function renderCatalog() {
@@ -1805,77 +1315,39 @@
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
-                    return false;
-                }
+                if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') return false;
+                if (b.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') return false;
 
-                if (b.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
-                    return false;
-                }
-
-                if (userRole === 'guest') {
-                    const hasPersonalPerm = !!userPerms[b.category];
-                    const hasGlobalPerm = !!globalGuestPermissions[b.category];
-                    if (!hasPersonalPerm && !hasGlobalPerm) {
-                        return false;
-                    }
-                }
+                if (userRole === 'guest' && !userPerms[b.category] && !globalGuestPermissions[b.category]) return false;
 
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
-
                 if (categoryMatch && categoryVal === 'Общественные писания' && publicSubfilter !== 'all') {
-                    if (b.publicTag !== publicSubfilter) {
-                        return false;
-                    }
+                    if (b.publicTag !== publicSubfilter) return false;
                 }
-
                 return (titleMatch || authorMatch) && categoryMatch;
             });
-            
-            if (filtered.length === 0) {
-                const noBooksMsg = userRole === 'guest' 
-                    ? 'Нет доступных трудов. Попросите Смотрителя выдать вам доступ к дополнительным категориям.' 
-                    : 'Ничего не найдено';
 
-                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted); font-size: 0.95rem;">${noBooksMsg}</div>`;
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted);">Ничего не найдено</div>`;
                 return;
             }
 
             filtered.forEach(book => {
                 const card = document.createElement('div');
                 card.className = 'book-card';
-                
-                let adminBtnsHtml = '';
-                if (currentUser && currentUser.role === 'keeper') {
-                    adminBtnsHtml = `
-                        <button class="btn-small btn-edit" onclick="openEditBookModal('${book.id}', event)">✏️ Редактировать</button>
-                        <button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>
-                    `;
-                }
-
-                let advancedBadgeHtml = book.isAdvanced ? `<div class="advanced-badge">⭐ Углубленные знания</div>` : '';
-                let authorHtml = book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic; margin-bottom: 0.4rem;">Автор: ${book.author}</div>` : '';
-                
-                let subTagHtml = '';
-                if (book.category === 'Общественные писания') {
-                    if (book.publicTag === 'players') {
-                        subTagHtml = `<span class="sub-tag">✍️ Игроки</span>`;
-                    } else {
-                        subTagHtml = `<span class="sub-tag">📜 TES</span>`;
-                    }
-                }
-
-                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
+                let adminBtnsHtml = (currentUser && currentUser.role === 'keeper') ? `
+                    <button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>
+                ` : '';
 
                 card.innerHTML = `
                     <div>
-                        ${advancedBadgeHtml}
-                        <div style="font-size: 0.8rem; ${categoryColor} margin-bottom: 0.2rem;">${book.category} ${subTagHtml}</div>
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 0.3rem;">${book.title}</h3>
-                        ${authorHtml}
+                        ${book.isAdvanced ? '<div class="advanced-badge">⭐ Углубленные знания</div>' : ''}
+                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">${book.category}</div>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;">${book.title}</h3>
+                        ${book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic;">Автор: ${book.author}</div>` : ''}
                     </div>
                     <div>
-                        <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:1rem; margin-top: 0.5rem;">${book.description || ''}</p>
+                        <p style="font-size:0.85rem; color: var(--text-muted); margin: 0.5rem 0 1rem;">${book.description || ''}</p>
                         <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
                         ${adminBtnsHtml}
                     </div>
@@ -1884,335 +1356,77 @@
             });
         }
 
-        function toggleAddBookSubtype() {
-            const cat = document.getElementById('book-category').value;
-            const tagBox = document.getElementById('add-book-public-tag-box');
-            tagBox.style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
-        }
-
-        function toggleEditBookSubtype() {
-            const cat = document.getElementById('edit-book-category').value;
-            const tagBox = document.getElementById('edit-book-public-tag-box');
-            tagBox.style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
-        }
-
-        async function openEditBookModal(bookId, event) {
+        async function deleteBook(bookId, event) {
             event.stopPropagation();
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Только Смотритель может редактировать книги!');
-                return;
-            }
-
-            const snapshot = await db.ref('books/' + bookId).once('value');
-            const book = snapshot.val();
-            if (!book) return;
-
-            document.getElementById('edit-book-id').value = bookId;
-            document.getElementById('edit-book-title').value = book.title || '';
-            document.getElementById('edit-book-author').value = book.author || '';
-            document.getElementById('edit-book-category').value = book.category || 'Общественные писания';
-            document.getElementById('edit-book-public-tag').value = book.publicTag || 'tes';
-            document.getElementById('edit-book-desc').value = book.description || '';
-            document.getElementById('edit-book-is-advanced').checked = !!book.isAdvanced;
-            document.getElementById('edit-book-append-file').value = '';
-
-            toggleEditBookSubtype();
-            document.getElementById('edit-book-modal').classList.add('active');
-        }
-
-        function closeEditBookModal() {
-            document.getElementById('edit-book-modal').classList.remove('active');
-        }
-
-        async function handleSaveBookEdit(e) {
-            e.preventDefault();
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Недостаточно прав!');
-                return;
-            }
-
-            const bookId = document.getElementById('edit-book-id').value;
-            const snapshot = await db.ref('books/' + bookId).once('value');
-            const book = snapshot.val();
-            if (!book) return;
-
-            const title = document.getElementById('edit-book-title').value.trim();
-            const author = document.getElementById('edit-book-author').value.trim();
-            const category = document.getElementById('edit-book-category').value;
-            const publicTag = document.getElementById('edit-book-public-tag').value;
-            const description = document.getElementById('edit-book-desc').value.trim();
-            const isAdvanced = document.getElementById('edit-book-is-advanced').checked;
-            const appendFileInput = document.getElementById('edit-book-append-file');
-            const files = appendFileInput.files;
-
-            const saveBtn = document.getElementById('edit-save-btn');
-            saveBtn.innerText = '⏳ Оптимизация и сохранение...';
-            saveBtn.disabled = true;
-
-            const updateData = {
-                title: title,
-                author: author,
-                category: category,
-                publicTag: publicTag,
-                description: description,
-                isAdvanced: isAdvanced
-            };
-
-            if (files.length > 0) {
-                let newImages = [];
-                for (let i = 0; i < files.length; i++) {
-                    const compressed = await compressImage(files[i]);
-                    newImages.push(compressed);
-                }
-
-                let existingPages = [];
-                if (book.pages) {
-                    existingPages = Array.isArray(book.pages) ? book.pages : Object.values(book.pages);
-                } else if (Array.isArray(book.fileData)) {
-                    existingPages = book.fileData;
-                }
-
-                const allPages = [...existingPages, ...newImages];
-                updateData.pageCount = allPages.length;
-                
-                await db.ref('books/' + bookId).update(updateData);
-
-                let updates = {};
-                allPages.forEach((img, idx) => { updates[idx] = img; });
-                await db.ref(`books/${bookId}/pages`).set(updates);
-            } else {
-                await db.ref('books/' + bookId).update(updateData);
-            }
-
-            showToast('✨ Труд успешно обновлен!');
-            saveBtn.innerText = 'Сохранить Изменения';
-            saveBtn.disabled = false;
-            closeEditBookModal();
-        }
-
-        function deleteBook(bookId, event) {
-            event.stopPropagation();
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Недостаточно прав!');
-                return;
-            }
-            if (confirm('Вы уверены, что хотите безвозвратно удалить этот труд из архива?')) {
-                db.ref('books/' + bookId).remove().then(() => {
-                    showToast('🗑️ Труд успешно удален из архива.');
-                }).catch(err => {
-                    showToast('❌ Ошибка удаления: ' + err.message);
-                });
+            if (confirm('Удалить этот труд из архива?')) {
+                await fetch(`${WORKER_URL}/api/books/${bookId}`, { method: 'DELETE' });
+                fetchBooks();
+                showToast('🗑️ Труд удален.');
             }
         }
 
         async function openViewer(id) {
-            const targetBookMeta = books.find(b => b.id === id);
-            const userRole = currentUser ? currentUser.role : 'guest';
-            const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
-
-            if (targetBookMeta) {
-                if (targetBookMeta.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
-                    showToast('🔒 Этот труд доступен только Профессорам и Смотрителю!');
-                    return;
-                }
-
-                if (targetBookMeta.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
-                    showToast('🔒 Этот труд доступен только Членам Коллегии, Профессорам и Смотрителю!');
-                    return;
-                }
-
-                if (userRole === 'guest') {
-                    const hasPersonalPerm = !!userPerms[targetBookMeta.category];
-                    const hasGlobalPerm = !!globalGuestPermissions[targetBookMeta.category];
-                    if (!hasPersonalPerm && !hasGlobalPerm) {
-                        showToast('🔒 У вас нет доступа к этой категории!');
-                        return;
-                    }
-                }
-            }
-
-            const body = document.getElementById('modal-viewer-body');
             const wrapper = document.getElementById('viewer-pages-wrapper');
-            body.scrollTop = 0;
-            resetZoom();
-
-            currentOpenBookPages = [];
-            loadedPagesCount = 0;
-
-            wrapper.innerHTML = `<div style="color: var(--text-gold); margin-top: 3rem; text-align: center; font-family: var(--font-title);" id="viewer-loader">⏳ Раскрываем фолиант...</div>`;
+            wrapper.innerHTML = `<div style="color: var(--text-gold); margin-top: 3rem; text-align: center;">⏳ Раскрываем фолиант...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
 
             try {
-                const metaSnap = await db.ref('books/' + id).once('value');
-                const book = metaSnap.val();
-
-                if (!book) {
-                    wrapper.innerHTML = `<div style="color: var(--danger); margin-top: 2rem;">Книга не найдена!</div>`;
-                    return;
-                }
-
-                document.getElementById('modal-book-title').innerText = book.title + (book.author ? ` (${book.author})` : '');
+                const res = await fetch(`${WORKER_URL}/api/books/${id}`);
+                const book = await res.json();
+                document.getElementById('modal-book-title').innerText = book.title;
                 wrapper.innerHTML = '';
-
-                if (book.pages) {
-                    currentOpenBookPages = Array.isArray(book.pages) ? book.pages : Object.values(book.pages);
-                } else if (Array.isArray(book.fileData)) {
-                    currentOpenBookPages = book.fileData;
-                } else if (book.fileData) {
-                    currentOpenBookPages = [book.fileData];
-                }
-
-                currentOpenBookPages = currentOpenBookPages.filter(img => img);
-
-                if (currentOpenBookPages.length === 0) {
-                    wrapper.innerHTML = `<div style="color: var(--text-muted); margin-top: 2rem;">В этом фолианте пока нет страниц.</div>`;
-                    return;
-                }
-
-                renderNextBookChunk();
-                body.onscroll = checkViewerScroll;
-
+                
+                (book.pages || []).forEach((imgSrc, i) => {
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.className = 'book-page-img';
+                    img.alt = `Страница ${i + 1}`;
+                    wrapper.appendChild(img);
+                });
             } catch (err) {
-                wrapper.innerHTML = `<div style="color: var(--danger); margin-top: 2rem;">Ошибка загрузки страниц: ${err.message}</div>`;
+                wrapper.innerHTML = `<div style="color: var(--danger); margin-top: 2rem;">Ошибка загрузки страниц.</div>`;
             }
         }
 
-        function renderNextBookChunk() {
-            const wrapper = document.getElementById('viewer-pages-wrapper');
-            if (!wrapper || currentOpenBookPages.length === 0) return;
-
-            const startIndex = loadedPagesCount;
-            const endIndex = Math.min(startIndex + PAGES_PER_CHUNK, currentOpenBookPages.length);
-
-            if (startIndex >= endIndex) return;
-
-            for (let i = startIndex; i < endIndex; i++) {
-                const imgSrc = currentOpenBookPages[i];
-                const img = document.createElement('img');
-                img.loading = 'lazy';
-                img.decoding = 'async';
-                img.src = imgSrc;
-                img.className = 'book-page-img';
-                img.alt = `Страница ${i + 1}`;
-                wrapper.appendChild(img);
-            }
-
-            loadedPagesCount = endIndex;
-        }
-
-        function checkViewerScroll() {
-            const body = document.getElementById('modal-viewer-body');
-            if (!body) return;
-
-            if (body.scrollTop + body.clientHeight >= body.scrollHeight - 300) {
-                if (loadedPagesCount < currentOpenBookPages.length) {
-                    renderNextBookChunk();
-                }
-            }
-        }
-
-        function toggleFullscreen() {
-            const container = document.getElementById('viewer-container-box');
-            const btn = document.getElementById('fullscreen-btn');
-            container.classList.toggle('fullscreen');
-            if (container.classList.contains('fullscreen')) {
-                btn.innerText = '🗗 Свернуть';
-            } else {
-                btn.innerText = '🖎 На весь экран';
-            }
-        }
-
-        function closeViewer() {
-            const body = document.getElementById('modal-viewer-body');
-            const wrapper = document.getElementById('viewer-pages-wrapper');
-            if (body) {
-                body.scrollTop = 0;
-                body.onscroll = null;
-            }
-            if (wrapper) {
-                wrapper.innerHTML = '';
-            }
-            currentOpenBookPages = [];
-            loadedPagesCount = 0;
-            resetZoom();
-            document.getElementById('viewer-container-box').classList.remove('fullscreen');
-            document.getElementById('fullscreen-btn').innerText = '🖎 На весь экран';
-            document.getElementById('viewer-modal').classList.remove('active');
-        }
+        function closeViewer() { document.getElementById('viewer-modal').classList.remove('active'); }
 
         async function handleAddBook(e) {
             e.preventDefault();
-            if (!currentUser || currentUser.role !== 'keeper') {
-                showToast('⛔ Недостаточно прав!');
-                return;
-            }
-
             const fileInput = document.getElementById('book-file');
             const files = fileInput.files;
             if (files.length === 0) return;
 
-            const title = document.getElementById('book-title').value.trim();
-            const author = document.getElementById('book-author').value.trim();
-            const category = document.getElementById('book-category').value;
-            const publicTag = document.getElementById('book-public-tag').value;
-            const description = document.getElementById('book-desc').value.trim();
-            const isAdvanced = document.getElementById('book-is-advanced').checked;
-
             const uploadBtn = document.getElementById('upload-btn');
             uploadBtn.disabled = true;
 
-            const bookId = 'book-' + Date.now();
-
-            try {
-                let compressedImages = [];
-                
-                for (let i = 0; i < files.length; i++) {
-                    uploadBtn.innerText = `⏳ Оптимизация страницы (${i + 1} из ${files.length})...`;
-                    const compressed = await compressImage(files[i], 1500, 2000, 0.7);
-                    compressedImages.push(compressed);
-                    
-                    if (i % 10 === 0) {
-                        await new Promise(r => setTimeout(r, 20));
-                    }
-                }
-
-                uploadBtn.innerText = '⏳ Запись метаданных в архив...';
-
-                const bookMeta = {
-                    title: title,
-                    author: author,
-                    category: category,
-                    publicTag: publicTag,
-                    description: description,
-                    isAdvanced: isAdvanced,
-                    pageCount: compressedImages.length,
-                    fileType: 'images'
-                };
-
-                await db.ref('books/' + bookId).set(bookMeta);
-
-                const chunkSize = 15;
-                for (let i = 0; i < compressedImages.length; i += chunkSize) {
-                    const chunk = compressedImages.slice(i, i + chunkSize);
-                    uploadBtn.innerText = `⏳ Отправка страниц (${i + 1} - ${Math.min(i + chunkSize, compressedImages.length)} из ${compressedImages.length})...`;
-                    
-                    let updates = {};
-                    chunk.forEach((imgBase64, index) => {
-                        updates[i + index] = imgBase64;
-                    });
-                    await db.ref(`books/${bookId}/pages`).update(updates);
-                }
-
-                document.getElementById('add-book-form').reset();
-                showToast('📚 Книга успешно добавлена в архив!');
-                uploadBtn.innerText = 'Добавить в Архив';
-                uploadBtn.disabled = false;
-
-            } catch (err) {
-                showToast('❌ Ошибка загрузки: ' + err.message);
-                uploadBtn.innerText = 'Добавить в Архив';
-                uploadBtn.disabled = false;
+            let compressedImages = [];
+            for (let i = 0; i < files.length; i++) {
+                uploadBtn.innerText = `⏳ Оптимизация (${i + 1}/${files.length})...`;
+                compressedImages.push(await compressImage(files[i]));
             }
+
+            uploadBtn.innerText = '⏳ Запись в Cloudflare D1...';
+
+            await fetch(`${WORKER_URL}/api/books`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'book-' + Date.now(),
+                    title: document.getElementById('book-title').value.trim(),
+                    author: document.getElementById('book-author').value.trim(),
+                    category: document.getElementById('book-category').value,
+                    publicTag: document.getElementById('book-public-tag').value,
+                    description: document.getElementById('book-desc').value.trim(),
+                    isAdvanced: document.getElementById('book-is-advanced').checked,
+                    pages: compressedImages
+                })
+            });
+
+            document.getElementById('add-book-form').reset();
+            uploadBtn.innerText = 'Добавить в Архив';
+            uploadBtn.disabled = false;
+            showToast('📚 Книга сохранена в Cloudflare!');
+            fetchBooks();
         }
     </script>
 </body>
