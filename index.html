@@ -498,7 +498,7 @@
                     <div id="public-subfilter-box" style="display: none;">
                         <select id="public-subfilter" onchange="renderCatalog()">
                             <option value="all">Все публичные труды</option>
-                            <option value="teso">📜 Книги из TESO</option>
+                            <option value="tes">📜 Книги из TES</option>
                             <option value="players">✍️ Книги, написанные игроками</option>
                         </select>
                     </div>
@@ -613,7 +613,7 @@
                                 <div class="form-group" id="add-book-public-tag-box">
                                     <label for="book-public-tag">Тип общественного писания</label>
                                     <select id="book-public-tag">
-                                        <option value="teso">📜 Книга из TESO</option>
+                                        <option value="tes">📜 Книга из TES</option>
                                         <option value="players">✍️ Книга, написанная игроками</option>
                                     </select>
                                 </div>
@@ -766,7 +766,7 @@
                     <div class="form-group" id="edit-book-public-tag-box">
                         <label for="edit-book-public-tag">Тип общественного писания</label>
                         <select id="edit-book-public-tag">
-                            <option value="teso">📜 Книга из TESO</option>
+                            <option value="tes">📜 Книга из TES</option>
                             <option value="players">✍️ Книга, написанная игроками</option>
                         </select>
                     </div>
@@ -1525,7 +1525,7 @@
                         title: data[key].title,
                         author: data[key].author,
                         category: data[key].category,
-                        publicTag: data[key].publicTag || 'teso',
+                        publicTag: data[key].publicTag || 'tes',
                         description: data[key].description,
                         isAdvanced: data[key].isAdvanced
                     }));
@@ -1620,7 +1620,7 @@
                     if (book.publicTag === 'players') {
                         subTagHtml = `<span class="sub-tag">✍️ Игроки</span>`;
                     } else {
-                        subTagHtml = `<span class="sub-tag">📜 TESO</span>`;
+                        subTagHtml = `<span class="sub-tag">📜 TES</span>`;
                     }
                 }
 
@@ -1670,7 +1670,7 @@
             document.getElementById('edit-book-title').value = book.title || '';
             document.getElementById('edit-book-author').value = book.author || '';
             document.getElementById('edit-book-category').value = book.category || 'Общественные писания';
-            document.getElementById('edit-book-public-tag').value = book.publicTag || 'teso';
+            document.getElementById('edit-book-public-tag').value = book.publicTag || 'tes';
             document.getElementById('edit-book-desc').value = book.description || '';
             document.getElementById('edit-book-is-advanced').checked = !!book.isAdvanced;
             document.getElementById('edit-book-append-file').value = '';
