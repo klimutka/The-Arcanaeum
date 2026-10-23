@@ -418,6 +418,44 @@
         .sort-header:hover {
             color: #fff !important;
         }
+
+        /* Стиль таблиц услуг */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        .service-card {
+            background: rgba(15, 18, 26, 0.9);
+            border: 1px solid var(--border-gold-dark);
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+        .service-card h3 {
+            font-family: var(--font-title);
+            color: var(--text-gold);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-gold-dark);
+            padding-bottom: 0.5rem;
+        }
+        .service-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .service-table tr {
+            border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+        }
+        .service-table td {
+            padding: 0.6rem 0;
+        }
+        .service-table input[type="text"] {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.85rem;
+            width: 110px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -515,55 +553,40 @@
             <div class="skyrim-card">
                 <div class="section-header">
                     <h2>📜 Услуги и Расценки Коллегии Винтерхолда</h2>
+                    <span id="services-edit-badge" class="role-tag role-keeper" style="display: none;">Архивариус: Режим редактирования</span>
                 </div>
                 <p style="margin-bottom: 2rem; color: var(--text-muted);">
                     Официальный прайс-лист на изготовление магических изделий и закупку кристаллов у мастеров Коллегии.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
-                    
-                    <!-- Свитки -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            📜 Свитки <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">3.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">9.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">30.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">⚡ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">130.000 септ</td></tr>
-                        </table>
-                    </div>
+                <!-- Контейнер для динамических таблиц услуг -->
+                <div id="services-grid" class="services-grid"></div>
 
-                    <!-- Посохи -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            🪄 Посохи <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Изготовление на заказ</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">15.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">40.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">🌿 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">80.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">180.000 септ</td></tr>
-                        </table>
-                    </div>
-
-                    <!-- Кристаллы маны -->
-                    <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">
-                            💎 Кристаллы маны <span style="font-size: 0.8rem; color: var(--text-muted); display: block; font-family: var(--font-body); font-weight: normal;">Закуп</span>
-                        </h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 1 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">400 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 2 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">2.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 3 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">5.000 септ</td></tr>
-                            <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);"><td style="padding: 0.5rem 0;">✨ 4 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">14.000 септ</td></tr>
-                            <tr><td style="padding: 0.5rem 0;">🔥 5 ур.</td><td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">70.000 септ</td></tr>
-                        </table>
-                    </div>
-
+                <!-- Блок добавления новой позиции (Только для Смотрителя/Архивариуса) -->
+                <div id="add-service-panel" style="display: none; border-top: 1px dashed var(--border-gold-dark); padding-top: 1.5rem; margin-top: 2.5rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); margin-bottom: 1rem; font-size: 1.1rem;">➕ Добавить новую услугу / предмет</h3>
+                    <form id="add-service-form" onsubmit="handleAddServiceItem(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="new-service-category">Категория *</label>
+                                <select id="new-service-category" required>
+                                    <option value="📜 СВИТКИ (Изготовление на заказ)">📜 СВИТКИ (Изготовление на заказ)</option>
+                                    <option value="🪄 ПОСОХИ (Изготовление на заказ)">🪄 ПОСОХИ (Изготовление на заказ)</option>
+                                    <option value="💎 КРИСТАЛЛЫ МАНЫ (закуп)">💎 КРИСТАЛЛЫ МАНЫ (закуп)</option>
+                                    <option value="🔮 ПРОЧИЕ УСЛУГИ">🔮 ПРОЧИЕ УСЛУГИ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-service-name">Название / Уровень *</label>
+                                <input type="text" id="new-service-name" required placeholder="Например: ⚡ 1 ур. или Изготовление зелья">
+                            </div>
+                            <div class="form-group">
+                                <label for="new-service-price">Стоимость *</label>
+                                <input type="text" id="new-service-price" required placeholder="Например: 3.000 септ">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-gold" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">Добавить в прайс-лист</button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -852,6 +875,7 @@
 
     <script>
         let books = [];
+        let servicesData = {};
         let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
         let allUsersData = {};
         let allDeletedUsersData = {};
@@ -884,6 +908,27 @@
             "Доклады"
         ];
 
+        // Стартовый дефолтный пресет услуг, если БД пуста
+        const INITIAL_SERVICES = {
+            "s1": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 1 ур.", price: "3.000 септ", order: 1 },
+            "s2": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 2 ур.", price: "9.000 септ", order: 2 },
+            "s3": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 3 ур.", price: "30.000 септ", order: 3 },
+            "s4": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "⚡ 4 ур.", price: "70.000 септ", order: 4 },
+            "s5": { category: "📜 СВИТКИ (Изготовление на заказ)", name: "🔥 5 ур.", price: "130.000 септ", order: 5 },
+
+            "st1": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 1 ур.", price: "5.000 септ", order: 1 },
+            "st2": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 2 ур.", price: "15.000 септ", order: 2 },
+            "st3": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 3 ур.", price: "40.000 септ", order: 3 },
+            "st4": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🌿 4 ур.", price: "80.000 септ", order: 4 },
+            "st5": { category: "🪄 ПОСОХИ (Изготовление на заказ)", name: "🔥 5 ур.", price: "180.000 септ", order: 5 },
+
+            "m1": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 1 ур.", price: "400 септ", order: 1 },
+            "m2": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 2 ур.", price: "2.000 септ", order: 2 },
+            "m3": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 3 ур.", price: "5.000 септ", order: 3 },
+            "m4": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "✨ 4 ур.", price: "14.000 септ", order: 4 },
+            "m5": { category: "💎 КРИСТАЛЛЫ МАНЫ (закуп)", name: "🔥 5 ур.", price: "70.000 септ", order: 5 }
+        };
+
         let currentZoom = 1;
         let isDragging = false;
         let startX, startY, scrollLeft, scrollTop;
@@ -896,6 +941,7 @@
             listenGlobalGuestPermissions();
             updateUIAuthState();
             listenFirebaseBooks();
+            listenFirebaseServices();
             listenFirebaseUsers();
             listenFirebaseDeletedUsers();
             listenFirebaseRequests();
@@ -1048,10 +1094,16 @@
             const adminDashboard = document.getElementById('admin-dashboard');
             const addBookContainer = document.getElementById('add-book-container');
             const guestPermContainer = document.getElementById('guest-permissions-container');
+            const addServicePanel = document.getElementById('add-service-panel');
+            const servicesEditBadge = document.getElementById('services-edit-badge');
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
             const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
             const memberProfKeeperOptions = document.querySelectorAll('.member-prof-keeper-only');
+
+            const isKeeper = currentUser && currentUser.role === 'keeper';
+            if (addServicePanel) addServicePanel.style.display = isKeeper ? 'block' : 'none';
+            if (servicesEditBadge) servicesEditBadge.style.display = isKeeper ? 'inline-block' : 'none';
 
             if (currentUser) {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'none';
@@ -1108,6 +1160,7 @@
                 profKeeperOptions.forEach(opt => opt.style.display = 'none');
                 memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
             }
+            renderServices();
         }
 
         function switchTab(tabName) {
@@ -1124,6 +1177,7 @@
             } else if (tabName === 'services') {
                 document.getElementById('nav-services-btn').classList.add('active');
                 document.getElementById('services-section').classList.add('active');
+                renderServices();
             } else if (tabName === 'request') {
                 document.getElementById('home-section').classList.remove('active');
                 document.getElementById('request-section').classList.add('active');
@@ -1596,6 +1650,133 @@
                 }
                 renderCatalog();
             });
+        }
+
+        // --- ЛОГИКА ДИНАМИЧЕСКИХ УСЛУГ И ПРАЙС-ЛИСТОВ ---
+        function listenFirebaseServices() {
+            db.ref('services').on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    // Инициализация стартовым списком, если база пустая
+                    db.ref('services').set(INITIAL_SERVICES);
+                } else {
+                    servicesData = data;
+                    renderServices();
+                }
+            });
+        }
+
+        function renderServices() {
+            const container = document.getElementById('services-grid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const isKeeper = currentUser && currentUser.role === 'keeper';
+
+            // Группируем услуги по категориям
+            const categories = {};
+            Object.keys(servicesData).forEach(id => {
+                const item = servicesData[id];
+                const cat = item.category || '🔮 ПРОЧИЕ УСЛУГИ';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push({ id, ...item });
+            });
+
+            // Сортируем внутри категорий по полю order
+            Object.keys(categories).forEach(cat => {
+                categories[cat].sort((a, b) => (a.order || 99) - (b.order || 99));
+            });
+
+            if (Object.keys(categories).length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color: var(--text-muted);">Прайс-лист пуст.</div>`;
+                return;
+            }
+
+            Object.keys(categories).forEach(catName => {
+                const card = document.createElement('div');
+                card.className = 'service-card';
+
+                let rowsHtml = '';
+                categories[catName].forEach(item => {
+                    if (isKeeper) {
+                        rowsHtml += `
+                            <tr>
+                                <td style="padding: 0.5rem 0;"><strong>${item.name}</strong></td>
+                                <td style="text-align: right; padding: 0.5rem 0;">
+                                    <div style="display: inline-flex; gap: 0.3rem; align-items: center;">
+                                        <input type="text" id="price-input-${item.id}" value="${item.price}">
+                                        <button class="btn-small btn-approve" onclick="updateServicePrice('${item.id}')" title="Сохранить цену">💾</button>
+                                        <button class="btn-small btn-reject" onclick="deleteServiceItem('${item.id}')" title="Удалить позицию">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        rowsHtml += `
+                            <tr>
+                                <td style="padding: 0.5rem 0;">${item.name}</td>
+                                <td style="text-align: right; color: var(--text-gold); font-weight: bold; padding: 0.5rem 0;">${item.price}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                card.innerHTML = `
+                    <h3>${catName}</h3>
+                    <table class="service-table">
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function updateServicePrice(id) {
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Архивариус может изменять цены!');
+                return;
+            }
+            const newPrice = document.getElementById(`price-input-${id}`).value.trim();
+            if (!newPrice) return;
+
+            await db.ref(`services/${id}/price`).set(newPrice);
+            showToast('✨ Цена обновлена!');
+        }
+
+        async function deleteServiceItem(id) {
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Архивариус может удалять услуги!');
+                return;
+            }
+            if (confirm('Удалить эту позицию из прайс-листа?')) {
+                await db.ref(`services/${id}`).remove();
+                showToast('🗑️ Позиция удалена.');
+            }
+        }
+
+        async function handleAddServiceItem(e) {
+            e.preventDefault();
+            if (!currentUser || currentUser.role !== 'keeper') {
+                showToast('⛔ Только Архивариус может добавлять услуги!');
+                return;
+            }
+
+            const category = document.getElementById('new-service-category').value;
+            const name = document.getElementById('new-service-name').value.trim();
+            const price = document.getElementById('new-service-price').value.trim();
+
+            const newItemId = 'serv_' + Date.now();
+            await db.ref(`services/${newItemId}`).set({
+                category: category,
+                name: name,
+                price: price,
+                order: Date.now()
+            });
+
+            document.getElementById('add-service-form').reset();
+            showToast('✨ Новая услуга успешно добавлена!');
         }
 
         function onCategoryFilterChange() {
