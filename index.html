@@ -229,6 +229,17 @@
             text-transform: uppercase;
         }
 
+        .sub-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            border: 1px solid var(--border-gold-dark);
+            color: var(--text-light);
+            background: rgba(0,0,0,0.4);
+        }
+
         .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
         .requests-table th, .requests-table td {
             padding: 0.8rem; text-align: left;
@@ -447,7 +458,7 @@
                         <select id="public-subfilter" onchange="renderCatalog()">
                             <option value="all">Все публичные труды</option>
                             <option value="tes">📜 Книги из TES</option>
-                            <option value="players">✍️ Книга, написанная игроками</option>
+                            <option value="players">✍️ Игроки</option>
                         </select>
                     </div>
                 </div>
@@ -467,7 +478,7 @@
                     Официальный прайс-лист на изготовление магических изделий и закупку кристаллов у мастеров Коллегии.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;" id="services-display-grid"></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;" id="services-display-grid"></div>
             </div>
         </section>
 
@@ -477,9 +488,9 @@
                 <div class="section-header"><h2>✉️ Запрос на Выдачу Доступа</h2></div>
                 <form id="access-request-form" onsubmit="handleRequestSubmit(event)">
                     <div class="form-grid">
-                        <div class="form-group"><label for="req-name">Имя Персонажа *</label><input type="text" id="req-name" required></div>
-                        <div class="form-group"><label for="req-password">Желаемый Пароль *</label><input type="password" id="req-password" required></div>
-                        <div class="form-group full-width"><label for="req-reason">Цель получения доступа *</label><textarea id="req-reason" rows="3" required></textarea></div>
+                        <div class="form-group"><label>Имя Персонажа *</label><input type="text" id="req-name" required></div>
+                        <div class="form-group"><label>Желаемый Пароль *</label><input type="password" id="req-password" required></div>
+                        <div class="form-group full-width"><label>Цель получения доступа *</label><textarea id="req-reason" rows="3" required></textarea></div>
                     </div>
                     <button type="submit" class="btn-gold">Отправить Заявку</button>
                 </form>
@@ -543,7 +554,7 @@
                                     <label>Тип общественного писания</label>
                                     <select id="book-public-tag">
                                         <option value="tes">📜 Книга из TES</option>
-                                        <option value="players">✍️ Книга, написанная игроками</option>
+                                        <option value="players">✍️ Игроки</option>
                                     </select>
                                 </div>
                                 <div class="form-group full-width">
@@ -651,7 +662,7 @@
                         <label>Тип общественного писания</label>
                         <select id="edit-book-public-tag">
                             <option value="tes">📜 Книга из TES</option>
-                            <option value="players">✍️ Книга, написанная игроками</option>
+                            <option value="players">✍️ Игроки</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Описание</label><textarea id="edit-book-desc" rows="3"></textarea></div>
@@ -726,6 +737,11 @@
                 { level: '3 ур.', price: '5.000 септ' },
                 { level: '4 ур.', price: '14.000 септ' },
                 { level: '5 ур.', price: '70.000 септ' }
+            ],
+            other: [
+                { level: 'Оценка артефакта', price: '1.000 септ' },
+                { level: 'Зачарование предмета', price: 'от 5.000 септ' },
+                { level: 'Снятие проклятия', price: '10.000 септ' }
             ]
         };
 
@@ -744,7 +760,16 @@
             try {
                 const res = await fetch(`${WORKER_URL}/api/services`);
                 const data = await res.json();
-                if (data) collegeServicesData = data;
+                if (data) {
+                    if (!data.other) {
+                        data.other = [
+                            { level: 'Оценка артефакта', price: '1.000 септ' },
+                            { level: 'Зачарование предмета', price: 'от 5.000 септ' },
+                            { level: 'Снятие проклятия', price: '10.000 септ' }
+                        ];
+                    }
+                    collegeServicesData = data;
+                }
                 renderServices();
             } catch (err) {
                 renderServices();
@@ -755,7 +780,7 @@
             const container = document.getElementById('services-display-grid');
             if (!container) return;
             
-            const makeTableRows = (items) => items.map(i => `
+            const makeTableRows = (items) => (items || []).map(i => `
                 <tr style="border-bottom: 1px solid rgba(197, 160, 89, 0.15);">
                     <td style="padding: 0.5rem 0;">⚡ ${i.level}</td>
                     <td style="padding: 0.5rem 0; text-align: right; color: var(--text-gold); font-weight: bold;">${i.price}</td>
@@ -775,6 +800,10 @@
                     <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">💎 Кристаллы маны</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.crystals)}</table>
                 </div>
+                <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">✨ Прочие услуги</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.other)}</table>
+                </div>
             `;
         }
 
@@ -784,11 +813,11 @@
 
             const renderInputs = (categoryKey, title) => {
                 let catHtml = `<h4 style="color: var(--text-gold); margin: 1rem 0 0.5rem;">${title}</h4>`;
-                collegeServicesData[categoryKey].forEach((item, idx) => {
+                (collegeServicesData[categoryKey] || []).forEach((item, idx) => {
                     catHtml += `
                         <div style="display:flex; gap: 0.5rem; margin-bottom: 0.4rem; align-items:center;">
-                            <span style="min-width: 60px; font-size:0.85rem;">${item.level}</span>
-                            <input type="text" class="service-edit-input" data-cat="${categoryKey}" data-idx="${idx}" value="${item.price}" style="flex:1; padding:0.4rem;">
+                            <input type="text" class="service-name-input" data-cat="${categoryKey}" data-idx="${idx}" value="${item.level}" style="width: 140px; padding:0.4rem; font-size:0.85rem;">
+                            <input type="text" class="service-edit-input" data-cat="${categoryKey}" data-idx="${idx}" value="${item.price}" style="flex:1; padding:0.4rem; font-size:0.85rem;">
                         </div>
                     `;
                 });
@@ -798,6 +827,7 @@
             html += renderInputs('scrolls', '📜 Свитки');
             html += renderInputs('staves', '🪄 Посохи');
             html += renderInputs('crystals', '💎 Кристаллы маны');
+            html += renderInputs('other', '✨ Прочие услуги');
 
             container.innerHTML = html;
             document.getElementById('edit-services-modal').classList.add('active');
@@ -808,11 +838,23 @@
         }
 
         async function saveServicesEdit() {
-            const inputs = document.querySelectorAll('.service-edit-input');
-            inputs.forEach(inp => {
+            const priceInputs = document.querySelectorAll('.service-edit-input');
+            const nameInputs = document.querySelectorAll('.service-name-input');
+
+            priceInputs.forEach(inp => {
                 const cat = inp.getAttribute('data-cat');
                 const idx = parseInt(inp.getAttribute('data-idx'));
-                collegeServicesData[cat][idx].price = inp.value.trim();
+                if (collegeServicesData[cat] && collegeServicesData[cat][idx]) {
+                    collegeServicesData[cat][idx].price = inp.value.trim();
+                }
+            });
+
+            nameInputs.forEach(inp => {
+                const cat = inp.getAttribute('data-cat');
+                const idx = parseInt(inp.getAttribute('data-idx'));
+                if (collegeServicesData[cat] && collegeServicesData[cat][idx]) {
+                    collegeServicesData[cat][idx].level = inp.value.trim();
+                }
             });
 
             await fetch(`${WORKER_URL}/api/services`, {
@@ -1291,10 +1333,21 @@
                     <button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>
                 ` : '';
 
+                let subTagHtml = '';
+                if (book.category === 'Общественные писания') {
+                    if (book.publicTag === 'players') {
+                        subTagHtml = '<span class="sub-tag">✍️ Игроки</span>';
+                    } else {
+                        subTagHtml = '<span class="sub-tag">📜 TES</span>';
+                    }
+                }
+
                 card.innerHTML = `
                     <div>
                         ${book.isAdvanced ? '<div class="advanced-badge">⭐ Углубленные знания</div>' : ''}
-                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">${book.category}</div>
+                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">
+                            ${book.category} ${subTagHtml}
+                        </div>
                         <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;">${book.title}</h3>
                         ${book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic;">Автор: ${book.author}</div>` : ''}
                     </div>
