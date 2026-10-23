@@ -266,6 +266,13 @@
             position: relative;
         }
 
+        .viewer-container.fullscreen {
+            max-width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0;
+            border: none;
+        }
+
         .edit-modal-container {
             background: #12161f; border: 2px solid var(--border-gold);
             width: 100%; max-width: 550px; padding: 2rem;
@@ -641,7 +648,8 @@
                     <button class="zoom-btn" onclick="changeZoom(-0.25)">-</button>
                     <span class="zoom-indicator" id="zoom-value">100%</span>
                     <button class="zoom-btn" onclick="changeZoom(0.25)">+</button>
-                    <button class="zoom-btn" onclick="resetZoom()">🔄</button>
+                    <button class="zoom-btn" onclick="resetZoom()" title="Сбросить масштаб">🔄</button>
+                    <button class="zoom-btn" id="fullscreen-btn" onclick="toggleFullscreen()" title="На весь экран">⛶</button>
                 </div>
                 <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
@@ -979,6 +987,21 @@
         function applyZoom() {
             document.getElementById('viewer-pages-wrapper').style.transform = `scale(${currentZoom})`;
             document.getElementById('zoom-value').innerText = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('viewer-container-box');
+            const btn = document.getElementById('fullscreen-btn');
+            
+            container.classList.toggle('fullscreen');
+            
+            if (container.classList.contains('fullscreen')) {
+                btn.innerText = '❐'; 
+                btn.title = 'Свернуть окно';
+            } else {
+                btn.innerText = '⛶'; 
+                btn.title = 'На весь экран';
+            }
         }
 
         function updateUIAuthState() {
@@ -1484,7 +1507,7 @@
                     publicTag: document.getElementById('edit-book-public-tag').value,
                     description: document.getElementById('edit-book-desc').value.trim(),
                     isAdvanced: document.getElementById('edit-book-is-advanced').checked,
-                    pages: [] // Пустой массив, чтобы воркер не перезаписывал/не стирал текущие страницы в базе
+                    pages: []
                 };
 
                 const saveRes = await fetch(`${WORKER_URL}/api/books`, {
@@ -1539,7 +1562,18 @@
             }
         }
 
-        function closeViewer() { document.getElementById('viewer-modal').classList.remove('active'); }
+        function closeViewer() {
+            const container = document.getElementById('viewer-container-box');
+            const btn = document.getElementById('fullscreen-btn');
+            
+            container.classList.remove('fullscreen');
+            if (btn) {
+                btn.innerText = '⛶';
+                btn.title = 'На весь экран';
+            }
+            
+            document.getElementById('viewer-modal').classList.remove('active');
+        }
 
         async function handleAddBook(e) {
             e.preventDefault();
