@@ -811,7 +811,7 @@
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.scrolls)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">🪄 Посохи</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">🪵 Посохи</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.staves)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
@@ -843,7 +843,7 @@
             };
 
             html += renderInputs('scrolls', '📜 Свитки');
-            html += renderInputs('staves', '⚡ Посохи');
+            html += renderInputs('staves', '🪵 Посохи');
             html += renderInputs('crystals', '💎 Закупка кристаллов маны');
             html += renderInputs('other', '✨ Прочие услуги');
 
@@ -1470,41 +1470,49 @@
         async function handleSaveBookEdit(e) {
             e.preventDefault();
             const bookId = document.getElementById('edit-book-id').value;
-            const existingBook = books.find(b => b.id === bookId);
             
-            let pages = [];
-            try {
-                const res = await fetch(`${WORKER_URL}/api/books/${bookId}`);
-                const fullBook = await res.json();
-                pages = fullBook.pages || [];
-            } catch (err) {
-                pages = existingBook ? existingBook.pages : [];
-            }
-
-            const updatedBook = {
-                id: bookId,
-                title: document.getElementById('edit-book-title').value.trim(),
-                author: document.getElementById('edit-book-author').value.trim(),
-                category: document.getElementById('edit-book-category').value,
-                publicTag: document.getElementById('edit-book-public-tag').value,
-                description: document.getElementById('edit-book-desc').value.trim(),
-                isAdvanced: document.getElementById('edit-book-is-advanced').checked,
-                pages: pages
-            };
-
             const btn = document.getElementById('edit-save-btn');
-            btn.disabled = true; btn.innerText = '⏳ Сохранение...';
+            btn.disabled = true; 
+            btn.innerText = '⏳ Сохранение...';
 
-            await fetch(`${WORKER_URL}/api/books`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedBook)
-            });
+            try {
+                // Подтягиваем существующие страницы книги, чтобы они не стирались при редактировании названия/описания
+                const res = await fetch(`${WORKER_URL}/api/books/${bookId}`);
+                let pages = [];
+                if (res.ok) {
+                    const fullBook = await res.json();
+                    pages = fullBook.pages || [];
+                }
 
-            btn.disabled = false; btn.innerText = 'Сохранить Изменения';
-            closeEditBookModal();
-            showToast('✨ Труд успешно отредактирован!');
-            fetchBooks();
+                const updatedBook = {
+                    id: bookId,
+                    title: document.getElementById('edit-book-title').value.trim(),
+                    author: document.getElementById('edit-book-author').value.trim(),
+                    category: document.getElementById('edit-book-category').value,
+                    publicTag: document.getElementById('edit-book-public-tag').value,
+                    description: document.getElementById('edit-book-desc').value.trim(),
+                    isAdvanced: document.getElementById('edit-book-is-advanced').checked,
+                    pages: pages
+                };
+
+                const saveRes = await fetch(`${WORKER_URL}/api/books`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedBook)
+                });
+
+                if (!saveRes.ok) throw new Error('Ошибка сервера при сохранении');
+
+                closeEditBookModal();
+                showToast('✨ Труд успешно отредактирован!');
+                fetchBooks();
+            } catch (err) {
+                console.error("Ошибка при редактировании:", err);
+                showToast('❌ Ошибка сохранения труда');
+            } finally {
+                btn.disabled = false; 
+                btn.innerText = 'Сохранить Изменения';
+            }
         }
 
         async function deleteBook(bookId, event) {
