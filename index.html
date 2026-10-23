@@ -368,6 +368,7 @@
         .btn-edit { background: #854d0e; color: #fff; margin-top: 0.5rem; width: 100%; }
         .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; width: 100%; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
+        .btn-perm { background: #1d4ed8; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); margin-right: 0.4rem; }
         .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
 
         .guest-perm-grid {
@@ -611,6 +612,22 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal Individual Guest Permissions -->
+    <div class="modal-overlay" id="user-perm-modal">
+        <div class="edit-modal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.8rem;">
+                <h3 style="font-family: var(--font-title); color: var(--text-gold);" id="user-perm-title">⚙️ Доступы для Гостя</h3>
+                <button onclick="closeUserPermModal()" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Отметьте категории, к которым этот Гость имеет персональный доступ:</p>
+            <input type="hidden" id="user-perm-target-key">
+            
+            <div class="guest-perm-grid" id="user-perm-checkboxes-container"></div>
+            
+            <button class="btn-gold" onclick="saveUserGuestPermissions()" style="width: 100%; margin-top: 1.5rem;">Сохранить Доступы</button>
+        </div>
+    </div>
 
     <!-- Modal Viewer -->
     <div class="modal-overlay" id="viewer-modal">
@@ -1209,8 +1226,16 @@
                 const currentRole = u.role || 'member';
                 const roleRu = ROLE_TRANSLATE[currentRole] || currentRole;
                 const isShaldir = key === 'шалдир';
-                let actionHtml = isShaldir ? `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>` :
-                    `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                
+                let actionHtml = '';
+                if (currentRole === 'guest') {
+                    actionHtml += `<button class="btn-perm" onclick="openUserPermModal('${key}')">⚙️ Доступы</button>`;
+                }
+                if (!isShaldir) {
+                    actionHtml += `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                } else {
+                    actionHtml += `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
+                }
 
                 tbody.innerHTML += `
                     <tr>
@@ -1228,6 +1253,55 @@
                     </tr>
                 `;
             });
+        }
+
+        function openUserPermModal(dbKey) {
+            const user = allUsersData[dbKey];
+            if (!user) return;
+            
+            document.getElementById('user-perm-target-key').value = dbKey;
+            document.getElementById('user-perm-title').innerText = `⚙️ Доступы для гостя: ${user.name}`;
+            
+            const container = document.getElementById('user-perm-checkboxes-container');
+            container.innerHTML = '';
+            
+            const userPerms = user.permissions || {};
+            ALL_CATEGORIES.forEach(cat => {
+                const isChecked = !!userPerms[cat];
+                container.innerHTML += `
+                    <label style="display:flex; align-items:center; gap: 0.5rem; cursor:pointer; color: var(--text-light); font-size:0.85rem;">
+                        <input type="checkbox" class="ind-user-perm-check" data-category="${cat}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px;">
+                        ${cat}
+                    </label>
+                `;
+            });
+            
+            document.getElementById('user-perm-modal').classList.add('active');
+        }
+
+        function closeUserPermModal() {
+            document.getElementById('user-perm-modal').classList.remove('active');
+        }
+
+        async function saveUserGuestPermissions() {
+            const dbKey = document.getElementById('user-perm-target-key').value;
+            let newPerms = {};
+            document.querySelectorAll('.ind-user-perm-check').forEach(chk => {
+                newPerms[chk.getAttribute('data-category')] = chk.checked;
+            });
+
+            await fetch(`${WORKER_URL}/api/users/permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: dbKey, permissions: newPerms })
+            });
+
+            if (allUsersData[dbKey]) {
+                allUsersData[dbKey].permissions = newPerms;
+            }
+
+            closeUserPermModal();
+            showToast('✨ Персональные доступы гостя обновлены!');
         }
 
         function renderDeletedUsersTable() {
