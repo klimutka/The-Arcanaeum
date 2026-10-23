@@ -491,7 +491,7 @@
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
                             <option value="Исследования" class="prof-keeper-only" style="display:none;">🔬 Исследования (Закрыто)</option>
-                            <option value="Дневники-Доклады" class="prof-keeper-only" style="display:none;">📓 Дневники-Доклады (Закрыто)</option>
+                            <option value="Доклады" class="member-prof-keeper-only" style="display:none;">📓 Доклады (Закрыто)</option>
                         </select>
                     </div>
 
@@ -606,7 +606,7 @@
                                         <option value="Зачарование">Зачарование</option>
                                         <option value="Алхимия">🧪 Алхимия</option>
                                         <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                                        <option value="Дневники-Доклады">📓 Дневники-Доклады (Только Профессоры/Смотритель)</option>
+                                        <option value="Доклады">📓 Доклады (Члены Коллегии/Профессоры/Смотритель)</option>
                                     </select>
                                 </div>
 
@@ -760,7 +760,7 @@
                             <option value="Зачарование">Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
                             <option value="Исследования">🔬 Исследования (Только Профессоры/Смотритель)</option>
-                            <option value="Дневники-Доклады">📓 Дневники-Доклады (Только Профессоры/Смотритель)</option>
+                            <option value="Доклады">📓 Доклады (Члены Коллегии/Профессоры/Смотритель)</option>
                         </select>
                     </div>
                     <div class="form-group" id="edit-book-public-tag-box">
@@ -821,7 +821,7 @@
             "Зачарование",
             "Алхимия",
             "Исследования",
-            "Дневники-Доклады"
+            "Доклады"
         ];
 
         let currentZoom = 1;
@@ -992,6 +992,7 @@
             const roleBadge = document.getElementById('user-role-badge');
             const accessStatus = document.getElementById('access-status-indicator');
             const profKeeperOptions = document.querySelectorAll('.prof-keeper-only');
+            const memberProfKeeperOptions = document.querySelectorAll('.member-prof-keeper-only');
 
             if (currentUser) {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'none';
@@ -1010,6 +1011,7 @@
                     roleBadge.innerText = 'Смотритель Арканеума';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-keeper">Смотритель</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'block');
+                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'professor') {
                     navLoginBtn.innerText = '📜 Панель';
                     adminDashboard.style.display = 'block';
@@ -1019,18 +1021,21 @@
                     roleBadge.innerText = 'Профессор';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-prof">Профессор</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'block');
+                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'guest') {
                     navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Авторизованный Гость</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
+                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
                 } else {
                     navLoginBtn.innerText = '👤 Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
                     accessStatus.innerHTML = 'Статус: <span class="role-tag role-member">Член Коллегии</span>';
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
+                    memberProfKeeperOptions.forEach(opt => opt.style.display = 'block'); // Члены Коллегии видят "Доклады"
                 }
             } else {
                 if (homeRequestBtn) homeRequestBtn.style.display = 'inline-flex';
@@ -1042,6 +1047,7 @@
                 guestPermContainer.style.display = 'none';
                 accessStatus.innerHTML = 'Статус: <span class="role-tag role-guest">Гость</span>';
                 profKeeperOptions.forEach(opt => opt.style.display = 'none');
+                memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
             }
         }
 
@@ -1556,7 +1562,13 @@
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                if ((b.category === 'Исследования' || b.category === 'Дневники-Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                // Проверка прав для Исследований (только профессора и смотритель)
+                if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
+                    return false;
+                }
+
+                // Проверка прав для Докладов (члены коллегии, профессора, смотритель)
+                if (b.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
                     return false;
                 }
 
@@ -1612,7 +1624,7 @@
                     }
                 }
 
-                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Дневники-Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
+                const categoryColor = book.category === 'Общественные писания' ? 'color: #10b981;' : ((book.category === 'Исследования' || book.category === 'Доклады') ? 'color: #c084fc;' : 'color: var(--accent-arcane);');
 
                 card.innerHTML = `
                     <div>
@@ -1752,15 +1764,21 @@
             }
         }
 
-        // Обновленная функция открытия книги (с постраничным рендерингом)
         async function openViewer(id) {
             const targetBookMeta = books.find(b => b.id === id);
             const userRole = currentUser ? currentUser.role : 'guest';
             const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
             if (targetBookMeta) {
-                if ((targetBookMeta.category === 'Исследования' || targetBookMeta.category === 'Дневники-Доклады') && userRole !== 'keeper' && userRole !== 'professor') {
+                // Проверка прав для Исследований (только профессора и смотритель)
+                if (targetBookMeta.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') {
                     showToast('🔒 Этот труд доступен только Профессорам и Смотрителю!');
+                    return;
+                }
+
+                // Проверка прав для Докладов (члены коллегии, профессора, смотритель)
+                if (targetBookMeta.category === 'Доклады' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') {
+                    showToast('🔒 Этот труд доступен только Членам Коллегии, Профессорам и Смотрителю!');
                     return;
                 }
 
@@ -1779,7 +1797,6 @@
             body.scrollTop = 0;
             resetZoom();
 
-            // Сбрасываем текущие данные книги перед открытием
             currentOpenBookPages = [];
             loadedPagesCount = 0;
 
@@ -1798,7 +1815,6 @@
                 document.getElementById('modal-book-title').innerText = book.title + (book.author ? ` (${book.author})` : '');
                 wrapper.innerHTML = '';
 
-                // Собираем все страницы в массив, но в DOM пока НЕ рендерим
                 if (book.pages) {
                     currentOpenBookPages = Array.isArray(book.pages) ? book.pages : Object.values(book.pages);
                 } else if (Array.isArray(book.fileData)) {
@@ -1807,7 +1823,6 @@
                     currentOpenBookPages = [book.fileData];
                 }
 
-                // Убираем возможные пустые значения
                 currentOpenBookPages = currentOpenBookPages.filter(img => img);
 
                 if (currentOpenBookPages.length === 0) {
@@ -1815,10 +1830,7 @@
                     return;
                 }
 
-                // Рендерим первую порцию страниц
                 renderNextBookChunk();
-
-                // Прикрепляем обработчик скролла для подгрузки остальных страниц
                 body.onscroll = checkViewerScroll;
 
             } catch (err) {
@@ -1826,7 +1838,6 @@
             }
         }
 
-        // Рендеринг следующей порции страниц
         function renderNextBookChunk() {
             const wrapper = document.getElementById('viewer-pages-wrapper');
             if (!wrapper || currentOpenBookPages.length === 0) return;
@@ -1850,7 +1861,6 @@
             loadedPagesCount = endIndex;
         }
 
-        // Автоматическая подгрузка порции при прокрутке до низа
         function checkViewerScroll() {
             const body = document.getElementById('modal-viewer-body');
             if (!body) return;
@@ -1878,7 +1888,7 @@
             const wrapper = document.getElementById('viewer-pages-wrapper');
             if (body) {
                 body.scrollTop = 0;
-                body.onscroll = null; // Очищаем обработчик скролла
+                body.onscroll = null;
             }
             if (wrapper) {
                 wrapper.innerHTML = '';
