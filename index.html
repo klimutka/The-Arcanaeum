@@ -475,9 +475,12 @@
                     <h2>📜 Услуги и Расценки Коллегии Винтерхолда</h2>
                     <button id="edit-services-btn" class="btn-gold" style="display:none; padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="openEditServicesModal()">✏️ Редактировать расценки</button>
                 </div>
-                <p style="margin-bottom: 2rem; color: var(--text-muted);">
-                    Официальный прайс-лист на изготовление магических изделий и закупку кристаллов у мастеров Коллегии.
+                <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                    Официальный прайс-лист на изготовление магических изделий, закупку кристаллов маны у мастеров Коллегии, а также проведение лекций.
                 </p>
+                <div style="background: rgba(197, 160, 89, 0.08); border-left: 3px solid var(--border-gold); padding: 0.8rem 1rem; margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-gold);">
+                    🏛️ <strong>Внимание:</strong> По поводу получения всех услуг и заключения сделок необходимо лично прибыть на территорию Коллегии Винтерхолда.
+                </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;" id="services-display-grid"></div>
             </div>
@@ -756,9 +759,8 @@
                 { level: '5 ур.', price: '70.000 септ' }
             ],
             other: [
-                { level: 'Оценка артефакта', price: '1.000 септ' },
-                { level: 'Зачарование предмета', price: 'от 5.000 септ' },
-                { level: 'Снятие проклятия', price: '10.000 септ' }
+                { level: 'Лекция в вашем городе', price: '20000 септ' },
+                { level: 'Лекция на территории Коллегии', price: '10000 септ' }
             ]
         };
 
@@ -780,9 +782,8 @@
                 if (data) {
                     if (!data.other) {
                         data.other = [
-                            { level: 'Оценка артефакта', price: '1.000 септ' },
-                            { level: 'Зачарование предмета', price: 'от 5.000 септ' },
-                            { level: 'Снятие проклятия', price: '10.000 септ' }
+                            { level: 'Лекция в вашем городе', price: '20000 септ' },
+                            { level: 'Лекция на территории Коллегии', price: '10000 септ' }
                         ];
                     }
                     collegeServicesData = data;
@@ -814,7 +815,7 @@
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.staves)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">💎 Кристаллы маны</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">💎 Закупка кристаллов маны</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.crystals)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
@@ -843,7 +844,7 @@
 
             html += renderInputs('scrolls', '📜 Свитки');
             html += renderInputs('staves', '🪄 Посохи');
-            html += renderInputs('crystals', '💎 Кристаллы маны');
+            html += renderInputs('crystals', '💎 Закупка кристаллов маны');
             html += renderInputs('other', '✨ Прочие услуги');
 
             container.innerHTML = html;
