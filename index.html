@@ -449,17 +449,17 @@
                     <div>
                         <select id="category-filter" onchange="onCategoryFilterChange()">
                             <option value="all">Все категории</option>
-                            <option value="Общественные писания">📜 Общественные писания</option>
-                            <option value="Базовый уровень" class="member-prof-keeper-only" style="display:none;">📖 Базовый уровень (Закрыто)</option>
-                            <option value="Разрушение">Школа Разрушения</option>
-                            <option value="Восстановление">Школа Восстановления</option>
-                            <option value="Колдовство">Школа Колдовства</option>
-                            <option value="Иллюзия">Школа Иллюзии</option>
-                            <option value="Изменение">Школа Изменения</option>
-                            <option value="Зачарование">Зачарование</option>
+                            <option value="Общественные писания">📚 Общественные писания</option>
+                            <option value="Базовый уровень" class="member-prof-keeper-only" style="display:none;">📖 Базовый уровень</option>
+                            <option value="Разрушение">💥 Школа Разрушения</option>
+                            <option value="Восстановление">💊 Школа Восстановления</option>
+                            <option value="Колдовство">💀 Школа Колдовства</option>
+                            <option value="Иллюзия">👁 Школа Иллюзии</option>
+                            <option value="Изменение">✨ Школа Изменения</option>
+                            <option value="Зачарование">🔮 Зачарование</option>
                             <option value="Алхимия">🧪 Алхимия</option>
-                            <option value="Исследования" class="prof-keeper-only" style="display:none;">🔬 Исследования (Закрыто)</option>
-                            <option value="Доклады" class="member-prof-keeper-only" style="display:none;">📓 Доклады (Закрыто)</option>
+                            <option value="Исследования" class="prof-keeper-only" style="display:none;">📋 Исследования</option>
+                            <option value="Доклады" class="member-prof-keeper-only" style="display:none;">📓 Доклады</option>
                         </select>
                     </div>
 
@@ -818,19 +818,19 @@
 
             container.innerHTML = `
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">📜 Свитки</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">Продажа свитков</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.scrolls)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">🪵 Посохи</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">Продажа посохов</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.staves)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">💎 Закупка кристаллов маны</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">Закупка кристаллов маны</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.crystals)}</table>
                 </div>
                 <div style="background: rgba(15, 18, 26, 0.9); border: 1px solid var(--border-gold-dark); border-radius: 4px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">✨ Прочие услуги</h3>
+                    <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-gold-dark); padding-bottom: 0.5rem;">Прочие услуги</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">${makeTableRows(collegeServicesData.other)}</table>
                 </div>
             `;
