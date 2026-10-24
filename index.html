@@ -723,13 +723,14 @@
 
     <script>
         let books = [];
-        let currentUser = JSON.parse(sessionStorage.getItem('skyrim_user')) || null;
+        let currentUser = JSON.parse(localStorage.getItem('skyrim_user')) || null;
         let allUsersData = {};
         let allDeletedUsersData = {};
         let allRequestsData = {};
 
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
+        let adminPollInterval = null;
 
         const ROLE_TRANSLATE = {
             'keeper': 'Смотритель',
@@ -920,9 +921,32 @@
                 renderUsersTable();
                 renderRequestsTable();
                 renderDeletedUsersTable();
+
+                startAdminPolling();
             } catch (err) {
                 console.error("Failed to load admin data:", err);
             }
+        }
+
+        function startAdminPolling() {
+            if (adminPollInterval) return;
+            
+            adminPollInterval = setInterval(async () => {
+                if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
+                    try {
+                        const res = await fetch(`${WORKER_URL}/api/admin/data`);
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        allRequestsData = data.requests || {};
+                        renderRequestsTable();
+                    } catch (err) {
+                        // Тихо подавляем ошибки сети при фоновом запросе
+                    }
+                } else {
+                    clearInterval(adminPollInterval);
+                    adminPollInterval = null;
+                }
+            }, 6000);
         }
 
         function renderGlobalGuestPermissionCheckboxes() {
@@ -1148,7 +1172,7 @@
                     role: userData.role || 'member',
                     permissions: userData.permissions || {}
                 };
-                sessionStorage.setItem('skyrim_user', JSON.stringify(currentUser));
+                localStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                 updateUIAuthState();
                 if (currentUser.role === 'keeper' || currentUser.role === 'professor') fetchAdminData();
                 showToast(`✨ Добро пожаловать, ${userData.name}!`);
@@ -1160,7 +1184,11 @@
 
         function userLogout() {
             currentUser = null;
-            sessionStorage.removeItem('skyrim_user');
+            localStorage.removeItem('skyrim_user');
+            if (adminPollInterval) {
+                clearInterval(adminPollInterval);
+                adminPollInterval = null;
+            }
             updateUIAuthState();
             showToast('👋 Вы вышли из системы.');
             switchTab('home');
