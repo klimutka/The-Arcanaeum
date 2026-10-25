@@ -464,10 +464,21 @@
                     </div>
 
                     <div id="public-subfilter-box" style="display: none;">
-                        <select id="public-subfilter" onchange="renderCatalog()">
+                        <select id="public-subfilter" onchange="onPublicSubfilterChange()">
                             <option value="all">Все публичные труды</option>
                             <option value="tes">📜 Книги из TES</option>
                             <option value="players">✍️ Игроки</option>
+                        </select>
+                    </div>
+
+                    <div id="tes-genre-filter-box" style="display: none;">
+                        <select id="tes-genre-filter" onchange="renderCatalog()">
+                            <option value="all">Все жанры TES</option>
+                            <option value="history">📜 История</option>
+                            <option value="myths">⚡ Мифы / Легенды / Предания</option>
+                            <option value="fiction">📖 Художественная литература / Романы</option>
+                            <option value="science">🔮 Наука / Магия / Ремесло</option>
+                            <option value="anachronisms">⏳ Анахронизмы</option>
                         </select>
                     </div>
                 </div>
@@ -565,9 +576,19 @@
                                 </div>
                                 <div class="form-group" id="add-book-public-tag-box">
                                     <label>Тип общественного писания</label>
-                                    <select id="book-public-tag">
+                                    <select id="book-public-tag" onchange="toggleAddBookTesGenreVisibility()">
                                         <option value="tes">📜 Книга из TES</option>
                                         <option value="players">✍️ Игроки</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="add-book-tes-genre-box" style="display: none;">
+                                    <label>Жанр книги TES *</label>
+                                    <select id="book-tes-genre">
+                                        <option value="history">📜 История</option>
+                                        <option value="myths">⚡ Мифы / Легенды / Предания</option>
+                                        <option value="fiction">📖 Художественная литература / Романы</option>
+                                        <option value="science">🔮 Наука / Магия / Ремесло</option>
+                                        <option value="anachronisms">⏳ Анахронизмы</option>
                                     </select>
                                 </div>
                                 <div class="form-group full-width">
@@ -691,9 +712,19 @@
                     </div>
                     <div class="form-group" id="edit-book-public-tag-box">
                         <label>Тип общественного писания</label>
-                        <select id="edit-book-public-tag">
+                        <select id="edit-book-public-tag" onchange="toggleEditBookTesGenreVisibility()">
                             <option value="tes">📜 Книга из TES</option>
                             <option value="players">✍️ Игроки</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-book-tes-genre-box" style="display: none;">
+                        <label>Жанр книги TES *</label>
+                        <select id="edit-book-tes-genre">
+                            <option value="history">📜 История</option>
+                            <option value="myths">⚡ Мифы / Легенды / Предания</option>
+                            <option value="fiction">📖 Художественная литература / Романы</option>
+                            <option value="science">🔮 Наука / Магия / Ремесло</option>
+                            <option value="anachronisms">⏳ Анахронизмы</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Описание</label><textarea id="edit-book-desc" rows="3"></textarea></div>
@@ -739,6 +770,14 @@
             'guest': 'Гость'
         };
 
+        const TES_GENRE_NAMES = {
+            'history': '📜 История',
+            'myths': '⚡ Мифы / Предания',
+            'fiction': '📖 Художественная литература',
+            'science': '🔮 Наука / Магия',
+            'anachronisms': '⏳ Анахронизмы'
+        };
+
         const ROLE_PRIORITY = { 'keeper': 1, 'professor': 2, 'member': 3, 'guest': 4 };
         let globalGuestPermissions = { "Общественные писания": true };
 
@@ -782,6 +821,7 @@
             updateUIAuthState();
             fetchBooks();
             fetchServices();
+            toggleAddBookSubtype();
             if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
                 fetchAdminData();
             }
@@ -939,9 +979,7 @@
                         const data = await res.json();
                         allRequestsData = data.requests || {};
                         renderRequestsTable();
-                    } catch (err) {
-                        // Тихо подавляем ошибки сети при фоновом запросе
-                    }
+                    } catch (err) {}
                 } else {
                     clearInterval(adminPollInterval);
                     adminPollInterval = null;
@@ -1141,12 +1179,31 @@
         function onCategoryFilterChange() {
             const categoryVal = document.getElementById('category-filter').value;
             const subfilterBox = document.getElementById('public-subfilter-box');
+            const tesGenreFilterBox = document.getElementById('tes-genre-filter-box');
             if (categoryVal === 'Общественные писания') {
                 subfilterBox.style.display = 'block';
+                updateTesGenreFilterVisibility();
             } else {
                 subfilterBox.style.display = 'none';
+                if (tesGenreFilterBox) tesGenreFilterBox.style.display = 'none';
             }
             renderCatalog();
+        }
+
+        function onPublicSubfilterChange() {
+            updateTesGenreFilterVisibility();
+            renderCatalog();
+        }
+
+        function updateTesGenreFilterVisibility() {
+            const categoryVal = document.getElementById('category-filter').value;
+            const publicSubfilter = document.getElementById('public-subfilter').value;
+            const tesGenreFilterBox = document.getElementById('tes-genre-filter-box');
+            if (categoryVal === 'Общественные писания' && publicSubfilter === 'tes') {
+                tesGenreFilterBox.style.display = 'block';
+            } else {
+                tesGenreFilterBox.style.display = 'none';
+            }
         }
 
         async function handleLoginSubmit(e) {
@@ -1428,6 +1485,7 @@
             const searchVal = document.getElementById('search-input').value.toLowerCase();
             const categoryVal = document.getElementById('category-filter').value;
             const publicSubfilter = document.getElementById('public-subfilter').value;
+            const tesGenreFilter = document.getElementById('tes-genre-filter') ? document.getElementById('tes-genre-filter').value : 'all';
             container.innerHTML = '';
 
             const userRole = currentUser ? currentUser.role : 'guest';
@@ -1446,6 +1504,9 @@
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
                 if (categoryMatch && categoryVal === 'Общественные писания' && publicSubfilter !== 'all') {
                     if (b.publicTag !== publicSubfilter) return false;
+                    if (publicSubfilter === 'tes' && tesGenreFilter !== 'all') {
+                        if (b.tesGenre !== tesGenreFilter) return false;
+                    }
                 }
                 return (titleMatch || authorMatch) && categoryMatch;
             });
@@ -1468,7 +1529,8 @@
                     if (book.publicTag === 'players') {
                         subTagHtml = '<span class="sub-tag">✍️ Игроки</span>';
                     } else {
-                        subTagHtml = '<span class="sub-tag">📜 TES</span>';
+                        let genreLabel = TES_GENRE_NAMES[book.tesGenre] || '📜 TES';
+                        subTagHtml = `<span class="sub-tag">${genreLabel}</span>`;
                     }
                 }
 
@@ -1501,6 +1563,7 @@
             document.getElementById('edit-book-author').value = book.author || '';
             document.getElementById('edit-book-category').value = book.category || 'Общественные писания';
             document.getElementById('edit-book-public-tag').value = book.publicTag || 'tes';
+            document.getElementById('edit-book-tes-genre').value = book.tesGenre || 'history';
             document.getElementById('edit-book-desc').value = book.description || '';
             document.getElementById('edit-book-is-advanced').checked = !!book.isAdvanced;
 
@@ -1514,12 +1577,38 @@
 
         function toggleAddBookSubtype() {
             const cat = document.getElementById('book-category').value;
-            document.getElementById('add-book-public-tag-box').style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
+            const isPublic = (cat === 'Общественные писания');
+            document.getElementById('add-book-public-tag-box').style.display = isPublic ? 'flex' : 'none';
+            toggleAddBookTesGenreVisibility();
+        }
+
+        function toggleAddBookTesGenreVisibility() {
+            const cat = document.getElementById('book-category').value;
+            const pubTag = document.getElementById('book-public-tag').value;
+            const tesGenreBox = document.getElementById('add-book-tes-genre-box');
+            if (cat === 'Общественные писания' && pubTag === 'tes') {
+                tesGenreBox.style.display = 'flex';
+            } else {
+                tesGenreBox.style.display = 'none';
+            }
         }
 
         function toggleEditBookSubtype() {
             const cat = document.getElementById('edit-book-category').value;
-            document.getElementById('edit-book-public-tag-box').style.display = (cat === 'Общественные писания') ? 'flex' : 'none';
+            const isPublic = (cat === 'Общественные писания');
+            document.getElementById('edit-book-public-tag-box').style.display = isPublic ? 'flex' : 'none';
+            toggleEditBookTesGenreVisibility();
+        }
+
+        function toggleEditBookTesGenreVisibility() {
+            const cat = document.getElementById('edit-book-category').value;
+            const pubTag = document.getElementById('edit-book-public-tag').value;
+            const tesGenreBox = document.getElementById('edit-book-tes-genre-box');
+            if (cat === 'Общественные писания' && pubTag === 'tes') {
+                tesGenreBox.style.display = 'flex';
+            } else {
+                tesGenreBox.style.display = 'none';
+            }
         }
 
         async function handleSaveBookEdit(e) {
@@ -1537,6 +1626,7 @@
                     author: document.getElementById('edit-book-author').value.trim(),
                     category: document.getElementById('edit-book-category').value,
                     publicTag: document.getElementById('edit-book-public-tag').value,
+                    tesGenre: (document.getElementById('edit-book-category').value === 'Общественные писания' && document.getElementById('edit-book-public-tag').value === 'tes') ? document.getElementById('edit-book-tes-genre').value : '',
                     description: document.getElementById('edit-book-desc').value.trim(),
                     isAdvanced: document.getElementById('edit-book-is-advanced').checked,
                     pages: []
@@ -1624,6 +1714,10 @@
 
             uploadBtn.innerText = '⏳ Запись в Cloudflare D1...';
 
+            const categoryVal = document.getElementById('book-category').value;
+            const publicTagVal = document.getElementById('book-public-tag').value;
+            const tesGenreVal = (categoryVal === 'Общественные писания' && publicTagVal === 'tes') ? document.getElementById('book-tes-genre').value : '';
+
             await fetch(`${WORKER_URL}/api/books`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1631,8 +1725,9 @@
                     id: 'book-' + Date.now(),
                     title: document.getElementById('book-title').value.trim(),
                     author: document.getElementById('book-author').value.trim(),
-                    category: document.getElementById('book-category').value,
-                    publicTag: document.getElementById('book-public-tag').value,
+                    category: categoryVal,
+                    publicTag: publicTagVal,
+                    tesGenre: tesGenreVal,
                     description: document.getElementById('book-desc').value.trim(),
                     isAdvanced: document.getElementById('book-is-advanced').checked,
                     pages: compressedImages
@@ -1640,6 +1735,7 @@
             });
 
             document.getElementById('add-book-form').reset();
+            toggleAddBookSubtype();
             uploadBtn.innerText = 'Добавить в Архив';
             uploadBtn.disabled = false;
             showToast('📚 Книга сохранена в Cloudflare!');
