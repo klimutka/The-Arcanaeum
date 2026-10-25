@@ -198,13 +198,80 @@
             display: flex; flex-wrap: wrap; gap: 1rem;
             background: rgba(10, 12, 16, 0.6);
             padding: 1rem; border: 1px solid rgba(197, 160, 89, 0.2);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        /* Управление видом каталога и пагинацией */
+        .catalog-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed rgba(197, 160, 89, 0.3);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .view-toggle-btns {
+            display: flex;
+            gap: 0.3rem;
+            background: rgba(10, 12, 16, 0.8);
+            padding: 3px;
+            border: 1px solid var(--border-gold-dark);
+            border-radius: 4px;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 2px;
+            font-family: var(--font-title);
+            transition: all 0.2s;
+        }
+
+        .view-btn.active, .view-btn:hover {
+            background: var(--border-gold-dark);
+            color: var(--text-gold);
         }
 
         .books-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
+        }
+
+        /* Стили для таблицы/списка книг */
+        .books-table-view {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        .books-table-view th {
+            font-family: var(--font-title);
+            color: var(--text-gold);
+            background: rgba(10, 12, 16, 0.9);
+            padding: 0.8rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-gold-dark);
+            font-size: 0.85rem;
+        }
+
+        .books-table-view td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+            background: rgba(15, 18, 26, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .books-table-view tr:hover td {
+            background: rgba(197, 160, 89, 0.08);
         }
 
         .book-card {
@@ -238,6 +305,38 @@
             border: 1px solid var(--border-gold-dark);
             color: var(--text-light);
             background: rgba(0,0,0,0.4);
+        }
+
+        /* Пагинатор */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: rgba(20, 26, 38, 0.8);
+            border: 1px solid var(--border-gold-dark);
+            color: var(--text-gold);
+            padding: 0.4rem 0.8rem;
+            font-family: var(--font-title);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--border-gold-dark);
+            color: #fff;
+            border-color: var(--border-gold);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .requests-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; }
@@ -372,8 +471,8 @@
         .btn-small { padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
         .btn-approve { background: #166534; color: #fff; }
         .btn-reject { background: #991b1b; color: #fff; }
-        .btn-edit { background: #854d0e; color: #fff; margin-top: 0.5rem; width: 100%; }
-        .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; width: 100%; }
+        .btn-edit { background: #854d0e; color: #fff; margin-top: 0.4rem; padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+        .btn-delete { background: #991b1b; color: #fff; margin-top: 0.3rem; padding: 0.3rem 0.6rem; font-size: 0.75rem; }
         .btn-user-delete { background: #991b1b; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
         .btn-perm { background: #1d4ed8; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); margin-right: 0.4rem; }
         .btn-restore { background: #1e3a8a; color: #fff; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 2px; cursor: pointer; border: none; font-family: var(--font-title); }
@@ -442,9 +541,10 @@
                     <span id="access-status-indicator" style="font-size: 0.85rem;">Статус: Гость</span>
                 </div>
 
+                <!-- Блок фильтрации и поиска -->
                 <div class="filter-bar">
-                    <div style="flex: 1; min-width: 220px;">
-                        <input type="text" id="search-input" placeholder="Поиск по названию или автору..." oninput="renderCatalog()" style="width: 100%;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <input type="text" id="search-input" placeholder="🔍 Поиск по названию или автору..." oninput="resetPageAndRender()" style="width: 100%;">
                     </div>
                     <div>
                         <select id="category-filter" onchange="onCategoryFilterChange()">
@@ -472,7 +572,7 @@
                     </div>
 
                     <div id="tes-genre-filter-box" style="display: none;">
-                        <select id="tes-genre-filter" onchange="renderCatalog()">
+                        <select id="tes-genre-filter" onchange="resetPageAndRender()">
                             <option value="all">Все жанры TES</option>
                             <option value="history">📜 История</option>
                             <option value="myths">⚡ Мифы / Легенды / Предания</option>
@@ -481,9 +581,46 @@
                             <option value="anachronisms">⏳ Анахронизмы</option>
                         </select>
                     </div>
+
+                    <div>
+                        <select id="sort-filter" onchange="resetPageAndRender()">
+                            <option value="title_asc">🔤 По названию (А–Я)</option>
+                            <option value="title_desc">🔤 По названию (Я–А)</option>
+                            <option value="author_asc">✍️ По автору</option>
+                            <option value="newest">🕒 Сначала новые</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="books-grid" id="books-container"></div>
+                <!-- Новая панель управления видом и пагинацией -->
+                <div class="catalog-controls">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" id="catalog-count-info">
+                        Найдено фолиантов: 0
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">
+                            <span>На странице:</span>
+                            <select id="items-per-page-select" onchange="changeItemsPerPage(this.value)" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">
+                                <option value="12">12</option>
+                                <option value="24" selected>24</option>
+                                <option value="48">48</option>
+                                <option value="all">Все</option>
+                            </select>
+                        </div>
+
+                        <div class="view-toggle-btns">
+                            <button class="view-btn" id="view-btn-grid" onclick="setCatalogView('grid')" title="Плитка">🔲 Сетка</button>
+                            <button class="view-btn" id="view-btn-list" onclick="setCatalogView('list')" title="Список">☰ Список</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Контейнер для вывода книг -->
+                <div id="books-container"></div>
+
+                <!-- Элементы Пагинации -->
+                <div class="pagination-container" id="pagination-box"></div>
             </div>
         </section>
 
@@ -500,7 +637,7 @@
                 <div style="background: rgba(197, 160, 89, 0.08); border-left: 3px solid var(--border-gold); padding: 1rem 1.2rem; margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-gold); display: flex; flex-direction: column; gap: 0.5rem;">
                     <div>🏛️ <strong>Внимание:</strong> По поводу получения всех услуг и заключения сделок необходимо лично прибыть на территорию Коллегии Винтерхолда.</div>
                     <div style="color: var(--text-light); font-size: 0.85rem; border-top: 1px dashed rgba(197, 160, 89, 0.3); padding-top: 0.5rem; margin-top: 0.3rem;">
-                        💬 <strong>Связь через «Скрижаль»:</strong> <span style="color: var(--text-gold); font-family: var(--font-title);">miha_oblepicha(Архимаг)</span>
+                        💬 <strong>Связь через «Скрижаль» (Discord):</strong> <span style="color: var(--text-gold); font-family: var(--font-title);">miha_oblepicha</span>
                     </div>
                 </div>
 
@@ -766,6 +903,11 @@
         let userSortDirection = 'asc'; 
         let adminPollInterval = null;
 
+        // Новые настройки каталога
+        let catalogViewMode = localStorage.getItem('arcanaeum_view_mode') || 'grid'; // 'grid' или 'list'
+        let currentPage = 1;
+        let itemsPerPage = parseInt(localStorage.getItem('arcanaeum_per_page')) || 24;
+
         const ROLE_TRANSLATE = {
             'keeper': 'Смотритель',
             'professor': 'Профессор',
@@ -825,6 +967,11 @@
             fetchBooks();
             fetchServices();
             toggleAddBookSubtype();
+            updateViewToggleButtons();
+            
+            const perPageSelect = document.getElementById('items-per-page-select');
+            if (perPageSelect) perPageSelect.value = itemsPerPage.toString();
+
             if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
                 fetchAdminData();
             }
@@ -1190,12 +1337,12 @@
                 subfilterBox.style.display = 'none';
                 if (tesGenreFilterBox) tesGenreFilterBox.style.display = 'none';
             }
-            renderCatalog();
+            resetPageAndRender();
         }
 
         function onPublicSubfilterChange() {
             updateTesGenreFilterVisibility();
-            renderCatalog();
+            resetPageAndRender();
         }
 
         function updateTesGenreFilterVisibility() {
@@ -1207,6 +1354,40 @@
             } else {
                 tesGenreFilterBox.style.display = 'none';
             }
+        }
+
+        /* Управление пагинацией и видом каталога */
+        function setCatalogView(mode) {
+            catalogViewMode = mode;
+            localStorage.setItem('arcanaeum_view_mode', mode);
+            updateViewToggleButtons();
+            renderCatalog();
+        }
+
+        function updateViewToggleButtons() {
+            const gridBtn = document.getElementById('view-btn-grid');
+            const listBtn = document.getElementById('view-btn-list');
+            if (!gridBtn || !listBtn) return;
+            gridBtn.classList.toggle('active', catalogViewMode === 'grid');
+            listBtn.classList.toggle('active', catalogViewMode === 'list');
+        }
+
+        function changeItemsPerPage(val) {
+            itemsPerPage = val === 'all' ? 999999 : parseInt(val);
+            localStorage.setItem('arcanaeum_per_page', val);
+            currentPage = 1;
+            renderCatalog();
+        }
+
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderCatalog();
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderCatalog();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function handleLoginSubmit(e) {
@@ -1483,22 +1664,29 @@
             showToast('❌ Заявка отклонена.');
         }
 
+        /* Главная функция отрисовки каталога */
         function renderCatalog() {
             const container = document.getElementById('books-container');
+            const countInfo = document.getElementById('catalog-count-info');
+            const paginationBox = document.getElementById('pagination-box');
+            
             const searchVal = document.getElementById('search-input').value.toLowerCase();
             const categoryVal = document.getElementById('category-filter').value;
             const publicSubfilter = document.getElementById('public-subfilter').value;
             const tesGenreFilter = document.getElementById('tes-genre-filter') ? document.getElementById('tes-genre-filter').value : 'all';
+            const sortVal = document.getElementById('sort-filter') ? document.getElementById('sort-filter').value : 'title_asc';
+
             container.innerHTML = '';
+            paginationBox.innerHTML = '';
 
             const userRole = currentUser ? currentUser.role : 'guest';
             const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
-            const filtered = books.filter(b => {
+            // 1. Фильтрация
+            let filtered = books.filter(b => {
                 const titleMatch = b.title ? b.title.toLowerCase().includes(searchVal) : false;
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
-                // Ограничения на закрытые разделы
                 if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') return false;
                 if ((b.category === 'Доклады' || b.category === 'Базовый уровень') && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') return false;
 
@@ -1514,46 +1702,135 @@
                 return (titleMatch || authorMatch) && categoryMatch;
             });
 
+            // 2. Сортировка
+            filtered.sort((a, b) => {
+                if (sortVal === 'title_asc') return (a.title || '').localeCompare(b.title || '', 'ru');
+                if (sortVal === 'title_desc') return (b.title || '').localeCompare(a.title || '', 'ru');
+                if (sortVal === 'author_asc') return (a.author || 'ЯЯЯ').localeCompare(b.author || 'ЯЯЯ', 'ru');
+                if (sortVal === 'newest') return (b.id || '').localeCompare(a.id || '');
+                return 0;
+            });
+
+            countInfo.innerText = `Найдено фолиантов: ${filtered.length}`;
+
             if (filtered.length === 0) {
                 container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-muted);">Ничего не найдено</div>`;
                 return;
             }
 
-            filtered.forEach(book => {
-                const card = document.createElement('div');
-                card.className = 'book-card';
-                let adminBtnsHtml = (currentUser && currentUser.role === 'keeper') ? `
-                    <button class="btn-small btn-edit" onclick="openEditBookModal('${book.id}', event)">✏️ Редактировать</button>
-                    <button class="btn-small btn-delete" onclick="deleteBook('${book.id}', event)">🗑️ Удалить Труд</button>
-                ` : '';
+            // 3. Расчет страниц
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
 
-                let subTagHtml = '';
-                if (book.category === 'Общественные писания') {
-                    if (book.publicTag === 'players') {
-                        subTagHtml = '<span class="sub-tag">✍️ Игроки</span>';
-                    } else {
-                        let genreLabel = TES_GENRE_NAMES[book.tesGenre] || '📜 TES';
-                        subTagHtml = `<span class="sub-tag">${genreLabel}</span>`;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedBooks = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            // 4. Отрисовка книги в зависимости от выбранного режима отображения (Сетка или Список)
+            if (catalogViewMode === 'grid') {
+                container.className = 'books-grid';
+                paginatedBooks.forEach(book => {
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    
+                    let adminBtnsHtml = (currentUser && currentUser.role === 'keeper') ? `
+                        <div style="display: flex; gap: 0.4rem; margin-top: 0.5rem;">
+                            <button class="btn-small btn-edit" style="flex:1;" onclick="openEditBookModal('${book.id}', event)">✏️ Изменить</button>
+                            <button class="btn-small btn-delete" style="flex:1;" onclick="deleteBook('${book.id}', event)">🗑️ Удалить</button>
+                        </div>
+                    ` : '';
+
+                    let subTagHtml = '';
+                    if (book.category === 'Общественные писания') {
+                        if (book.publicTag === 'players') {
+                            subTagHtml = '<span class="sub-tag">✍️ Игроки</span>';
+                        } else {
+                            let genreLabel = TES_GENRE_NAMES[book.tesGenre] || '📜 TES';
+                            subTagHtml = `<span class="sub-tag">${genreLabel}</span>`;
+                        }
+                    }
+
+                    card.innerHTML = `
+                        <div>
+                            ${book.isAdvanced ? '<div class="advanced-badge">⭐ Углубленные знания</div>' : ''}
+                            <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">
+                                ${book.category} ${subTagHtml}
+                            </div>
+                            <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;">${book.title}</h3>
+                            ${book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic;">Автор: ${book.author}</div>` : '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Автор: неизвестен</div>'}
+                        </div>
+                        <div>
+                            <p style="font-size:0.85rem; color: var(--text-muted); margin: 0.5rem 0 1rem; line-height: 1.4;">${book.description || ''}</p>
+                            <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                            ${adminBtnsHtml}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // Табличный/Списочный вид
+                container.className = '';
+                const table = document.createElement('table');
+                table.className = 'books-table-view';
+                
+                let isKeeper = (currentUser && currentUser.role === 'keeper');
+
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Название фолианта</th>
+                            <th>Автор</th>
+                            <th>Категория / Жанр</th>
+                            <th style="text-align: right;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginatedBooks.map(book => {
+                            let subTag = '';
+                            if (book.category === 'Общественные писания') {
+                                subTag = book.publicTag === 'players' ? ' [Игроки]' : ` [${TES_GENRE_NAMES[book.tesGenre] || 'TES'}]`;
+                            }
+                            
+                            let adminActions = isKeeper ? `
+                                <button class="btn-small btn-edit" style="margin:0;" onclick="openEditBookModal('${book.id}', event)">✏️</button>
+                                <button class="btn-small btn-delete" style="margin:0;" onclick="deleteBook('${book.id}', event)">🗑️</button>
+                            ` : '';
+
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong style="color: var(--text-gold); font-family: var(--font-title); cursor: pointer;" onclick="openViewer('${book.id}')">
+                                            ${book.isAdvanced ? '⭐ ' : ''}${book.title}
+                                        </strong>
+                                    </td>
+                                    <td style="color: var(--text-light); font-style: italic;">${book.author || 'неизвестен'}</td>
+                                    <td style="font-size: 0.8rem; color: var(--text-muted);">${book.category}${subTag}</td>
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <button class="btn-gold" style="padding: 0.3rem 0.8rem; font-size: 0.75rem; margin-right: 0.3rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                                        ${adminActions}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                `;
+                container.appendChild(table);
+            }
+
+            // 5. Отрисовка пагинатора (кнопок страниц)
+            if (totalPages > 1 && itemsPerPage < 999) {
+                let paginationHtml = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">◀ Назад</button>`;
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                        paginationHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                    } else if (i === currentPage - 3 || i === currentPage + 3) {
+                        paginationHtml += `<span style="color: var(--text-muted); padding: 0 0.2rem;">...</span>`;
                     }
                 }
 
-                card.innerHTML = `
-                    <div>
-                        ${book.isAdvanced ? '<div class="advanced-badge">⭐ Углубленные знания</div>' : ''}
-                        <div style="font-size: 0.8rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">
-                            ${book.category} ${subTagHtml}
-                        </div>
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;">${book.title}</h3>
-                        ${book.author ? `<div style="font-size: 0.8rem; color: var(--text-gold); font-style: italic;">Автор: ${book.author}</div>` : ''}
-                    </div>
-                    <div>
-                        <p style="font-size:0.85rem; color: var(--text-muted); margin: 0.5rem 0 1rem;">${book.description || ''}</p>
-                        <button class="btn-gold" style="width:100%; padding:0.6rem; font-size:0.8rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
-                        ${adminBtnsHtml}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+                paginationHtml += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">Вперед ▶</button>`;
+                paginationBox.innerHTML = paginationHtml;
+            }
         }
 
         async function openEditBookModal(bookId, event) {
