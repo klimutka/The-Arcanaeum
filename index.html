@@ -1006,7 +1006,22 @@
 
         let currentZoom = 1;
 
+        // ФУНКЦИЯ ПРОВЕРКИ ВРЕМЕНИ СЕССИИ (2 ЧАСА)
+        function checkSessionTimeout() {
+            if (!currentUser) return false;
+            const TWO_HOURS = 2 * 60 * 60 * 1000; // 2 часа в миллисекундах
+            if (currentUser.loginTime && (Date.now() - currentUser.loginTime > TWO_HOURS)) {
+                userLogout();
+                showToast('⏳ Время сессии истекло (прошло 2 часа). Пожалуйста, войдите снова.');
+                return false;
+            }
+            return true;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Проверяем 2-часовой тайм-аут при старте
+            if (!checkSessionTimeout()) return;
+
             updateUIAuthState();
             fetchBooks();
             fetchServices();
@@ -1151,6 +1166,24 @@
                 allRequestsData = data.requests || {};
                 globalGuestPermissions = data.guestPermissions || {};
 
+                // Проверяем актуальность сессии текущего администратора/профессора
+                if (currentUser) {
+                    if (allDeletedUsersData[currentUser.key]) {
+                        userLogout();
+                        showToast('❌ Ваш аккаунт был удален администратором.');
+                        return;
+                    }
+                    if (allUsersData[currentUser.key]) {
+                        const serverRole = allUsersData[currentUser.key].role || 'member';
+                        if (serverRole !== currentUser.role) {
+                            currentUser.role = serverRole;
+                            localStorage.setItem('skyrim_user', JSON.stringify(currentUser));
+                            updateUIAuthState();
+                            showToast('⚠️ Ваша роль была изменена.');
+                        }
+                    }
+                }
+
                 renderGlobalGuestPermissionCheckboxes();
                 renderUsersTable();
                 renderRequestsTable();
@@ -1172,6 +1205,26 @@
                         if (!res.ok) return;
                         const data = await res.json();
                         allRequestsData = data.requests || {};
+                        allUsersData = data.users || {};
+                        allDeletedUsersData = data.deletedUsers || {};
+
+                        // Проверка удаления или смены роли прямо во время сессии
+                        if (allDeletedUsersData[currentUser.key]) {
+                            userLogout();
+                            showToast('❌ Ваш аккаунт был удален.');
+                            return;
+                        }
+                        if (allUsersData[currentUser.key]) {
+                            const serverRole = allUsersData[currentUser.key].role || 'member';
+                            if (serverRole !== currentUser.role) {
+                                currentUser.role = serverRole;
+                                localStorage.setItem('skyrim_user', JSON.stringify(currentUser));
+                                updateUIAuthState();
+                                showToast('⚠️ Ваша роль была изменена администратором.');
+                                renderUsersTable();
+                            }
+                        }
+
                         renderRequestsTable();
                     } catch (err) {}
                 } else {
@@ -1342,6 +1395,9 @@
         }
 
         function switchTab(tabName) {
+            // При переключении вкладок проверяем, не истекли ли 2 часа
+            if (!checkSessionTimeout()) return;
+
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.section-panel').forEach(sec => sec.classList.remove('active'));
 
@@ -1455,7 +1511,8 @@
                     key: userData.key, 
                     name: userData.name, 
                     role: userData.role || 'member',
-                    permissions: userData.permissions || {}
+                    permissions: userData.permissions || {},
+                    loginTime: Date.now() // Сохраняем время входа для 2-часового ограничения
                 };
                 localStorage.setItem('skyrim_user', JSON.stringify(currentUser));
                 updateUIAuthState();
