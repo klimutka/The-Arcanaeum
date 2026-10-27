@@ -35,6 +35,7 @@
 
     <style>
         :root {
+        :root {
             --bg-dark: #0a0c10;
             --bg-card: rgba(18, 22, 31, 0.85);
             --border-gold: #c5a059;
@@ -890,7 +891,7 @@
 
                 <div id="admin-dashboard" style="display: none;">
                     <div style="margin-bottom: 1.2rem; background: rgba(197, 160, 89, 0.1); padding: 0.8rem; border: 1px solid var(--border-gold-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;" id="dashboard-title">🧙‍♂️ Панель Управления</h3>
+                        <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1.1rem;" id="dashboard-title">Панель Управления</h3>
                         <span id="user-role-badge"></span>
                     </div>
 
@@ -1512,7 +1513,7 @@
                 const role = currentUser.role || 'member';
 
                 if (role === 'keeper') {
-                    navLoginBtn.innerText = '🧙‍♂️ Панель';
+                    navLoginBtn.innerText = 'Панель';
                     adminDashboard.style.display = 'block';
                     addBookContainer.style.display = 'block';
                     guestPermContainer.style.display = 'block';
@@ -1534,7 +1535,7 @@
                     profKeeperOptions.forEach(opt => opt.style.display = 'block');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'block');
                 } else if (role === 'guest') {
-                    navLoginBtn.innerText = '👤 Профиль';
+                    navLoginBtn.innerText = 'Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
                     if (editServicesBtn) editServicesBtn.style.display = 'none';
@@ -1542,7 +1543,7 @@
                     profKeeperOptions.forEach(opt => opt.style.display = 'none');
                     memberProfKeeperOptions.forEach(opt => opt.style.display = 'none');
                 } else {
-                    navLoginBtn.innerText = '👤 Профиль';
+                    navLoginBtn.innerText = 'Профиль';
                     adminDashboard.style.display = 'none';
                     guestPermContainer.style.display = 'none';
                     if (editServicesBtn) editServicesBtn.style.display = 'none';
