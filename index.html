@@ -1008,7 +1008,8 @@
 
         // ФУНКЦИЯ ПРОВЕРКИ ВРЕМЕНИ СЕССИИ (2 ЧАСА)
         function checkSessionTimeout() {
-            if (!currentUser) return false;
+            // Гость без активной сессии может пользоваться публичными разделами сайта.
+            if (!currentUser) return true;
             const TWO_HOURS = 2 * 60 * 60 * 1000; // 2 часа в миллисекундах
             if (currentUser.loginTime && (Date.now() - currentUser.loginTime > TWO_HOURS)) {
                 userLogout();
