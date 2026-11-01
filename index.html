@@ -1704,6 +1704,16 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // Безопасно вставляет ID книги в inline-обработчик HTML.
+        // JSON.stringify экранирует кавычки и переводы строк; HTML-сущности
+        // не дают кавычкам завершить атрибут onclick.
+        function inlineJsArg(value) {
+            return JSON.stringify(String(value ?? ''))
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;');
+        }
+
         let books = [];
         let currentUser = JSON.parse(safeGetItem('skyrim_user')) || null;
         let allUsersData = {};
@@ -2896,8 +2906,8 @@
                     
                     let adminBtnsHtml = (currentUser && currentUser.role === 'keeper') ? `
                         <div style="display: flex; gap: 0.4rem; margin-top: 0.5rem;">
-                            <button class="btn-small btn-edit" style="flex:1;" onclick="openEditBookModal('${book.id}', event)">✏️ Изменить</button>
-                            <button class="btn-small btn-delete" style="flex:1;" onclick="deleteBook('${book.id}', event)">🗑️ Удалить</button>
+                            <button class="btn-small btn-edit" style="flex:1;" onclick="openEditBookModal(${inlineJsArg(book.id)}, event)">✏️ Изменить</button>
+                            <button class="btn-small btn-delete" style="flex:1;" onclick="deleteBook(${inlineJsArg(book.id)}, event)">🗑️ Удалить</button>
                         </div>
                     ` : '';
 
@@ -2922,7 +2932,7 @@
                         </div>
                         <div>
                             <p style="font-size:0.82rem; color: var(--text-muted); margin: 0.5rem 0 0.8rem; line-height: 1.4;">${book.description || ''}</p>
-                            <button class="btn-gold" style="width:100%; padding:0.55rem; font-size:0.78rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                            <button class="btn-gold" style="width:100%; padding:0.55rem; font-size:0.78rem;" onclick="openViewer(${inlineJsArg(book.id)})">📖 Читать</button>
                             ${adminBtnsHtml}
                         </div>
                     `;
@@ -2953,21 +2963,21 @@
                             }
                             
                             let adminActions = isKeeper ? `
-                                <button class="btn-small btn-edit" style="margin:0;" onclick="openEditBookModal('${book.id}', event)">✏️</button>
-                                <button class="btn-small btn-delete" style="margin:0;" onclick="deleteBook('${book.id}', event)">🗑️</button>
+                                <button class="btn-small btn-edit" style="margin:0;" onclick="openEditBookModal(${inlineJsArg(book.id)}, event)">✏️</button>
+                                <button class="btn-small btn-delete" style="margin:0;" onclick="deleteBook(${inlineJsArg(book.id)}, event)">🗑️</button>
                             ` : '';
 
                             return `
                                 <tr>
                                     <td>
-                                        <strong style="color: var(--text-gold); font-family: var(--font-title); cursor: pointer;" onclick="openViewer('${book.id}')">
+                                        <strong style="color: var(--text-gold); font-family: var(--font-title); cursor: pointer;" onclick="openViewer(${inlineJsArg(book.id)})">
                                             ${book.isAdvanced ? '⭐ ' : ''}${book.title}
                                         </strong>
                                     </td>
                                     <td style="color: var(--text-light); font-style: italic;">${book.author || 'неизвестен'}</td>
                                     <td style="font-size: 0.78rem; color: var(--text-muted);">${getCategoryDisplayName(book.category)}${subTag}</td>
                                     <td style="text-align: right; white-space: nowrap;">
-                                        <button class="btn-gold" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; margin-right: 0.2rem;" onclick="openViewer('${book.id}')">📖 Читать</button>
+                                        <button class="btn-gold" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; margin-right: 0.2rem;" onclick="openViewer(${inlineJsArg(book.id)})">📖 Читать</button>
                                         ${adminActions}
                                     </td>
                                 </tr>
