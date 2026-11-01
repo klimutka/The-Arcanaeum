@@ -2626,17 +2626,26 @@
 
             pendingKeys.forEach(key => {
                 const r = allRequestsData[key];
+                // Кодируем ключ, чтобы апострофы и кавычки в имени не ломали inline-JavaScript.
+                const safeKey = encodeURIComponent(key).replace(/'/g, '%27');
+                const safeName = String(r.name || '').replace(/[&<>"]/g, ch => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+                })[ch]);
+                const safeReason = String(r.reason || '').replace(/[&<>"]/g, ch => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+                })[ch]);
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${r.name}</strong></td>
-                        <td style="font-size:0.8rem;">${r.reason}</td>
+                        <td><strong>${safeName}</strong></td>
+                        <td style="font-size:0.8rem;">${safeReason}</td>
                         <td><span class="status-badge status-pending">На рассмотрении</span></td>
                         <td>
                             <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
-                                <button class="btn-small btn-approve" style="background:#4b5563;" onclick="approveUser('${key}', 'guest')">+ Гость</button>
-                                <button class="btn-small btn-approve" onclick="approveUser('${key}', 'member')">+ Член</button>
-                                <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser('${key}', 'professor')">+ Профессор</button>
-                                <button class="btn-small btn-reject" onclick="rejectUser('${key}')">Отклонить</button>
+                                <button class="btn-small btn-approve" style="background:#4b5563;" onclick="approveUser(decodeURIComponent('${safeKey}'), 'guest')">+ Гость</button>
+                                <button class="btn-small btn-approve" onclick="approveUser(decodeURIComponent('${safeKey}'), 'member')">+ Член</button>
+                                <button class="btn-small btn-approve" style="background:#6b21a8;" onclick="approveUser(decodeURIComponent('${safeKey}'), 'professor')">+ Профессор</button>
+                                <button class="btn-small btn-reject" onclick="rejectUser(decodeURIComponent('${safeKey}'))">Отклонить</button>
                             </div>
                         </td>
                     </tr>
@@ -2798,23 +2807,41 @@
         }
 
         async function approveUser(dbKey, roleToAssign) {
-            await fetch(`${WORKER_URL}/api/requests/approve`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: dbKey, role: roleToAssign })
-            });
-            fetchAdminData();
-            showToast('✅ Заявка одобрена!');
+            try {
+                const response = await fetch(`${WORKER_URL}/api/requests/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: dbKey, role: roleToAssign })
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+                await fetchAdminData();
+                showToast('✅ Заявка одобрена!');
+            } catch (error) {
+                console.error('Не удалось одобрить заявку:', error);
+                showToast(`❌ Не удалось одобрить заявку: ${error.message}`);
+            }
         }
 
         async function rejectUser(dbKey) {
-            await fetch(`${WORKER_URL}/api/requests/reject`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: dbKey })
-            });
-            fetchAdminData();
-            showToast('❌ Заявка отклонена.');
+            try {
+                const response = await fetch(`${WORKER_URL}/api/requests/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: dbKey })
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+                await fetchAdminData();
+                showToast('❌ Заявка отклонена.');
+            } catch (error) {
+                console.error('Не удалось отклонить заявку:', error);
+                showToast(`❌ Не удалось отклонить заявку: ${error.message}`);
+            }
         }
 
         /* Главная функция отрисовки каталога */
