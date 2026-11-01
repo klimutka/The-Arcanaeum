@@ -2685,22 +2685,27 @@
                 const roleRu = ROLE_TRANSLATE[currentRole] || currentRole;
                 const isShaldir = key === 'шалдир';
                 
+                const safeKeyArg = inlineJsArg(key);
+                const safeName = String(u.name || '').replace(/[&<>"]/g, ch => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+                })[ch]);
+
                 let actionHtml = '';
                 if (currentRole === 'guest') {
-                    actionHtml += `<button class="btn-perm" onclick="openUserPermModal('${key}')">⚙️ Доступы</button>`;
+                    actionHtml += `<button class="btn-perm" onclick="openUserPermModal(${safeKeyArg})">⚙️ Доступы</button>`;
                 }
                 if (!isShaldir) {
-                    actionHtml += `<button class="btn-user-delete" onclick="deleteUser('${key}')">🗑️ Удалить</button>`;
+                    actionHtml += `<button class="btn-user-delete" onclick="deleteUser(${safeKeyArg})">🗑️ Удалить</button>`;
                 } else {
                     actionHtml += `<span style="font-size: 0.75rem; color: var(--text-gold);">🛡️ Неприкосновенен</span>`;
                 }
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${u.name}</strong> ${isShaldir ? '👑' : ''}</td>
+                        <td><strong>${safeName}</strong> ${isShaldir ? '👑' : ''}</td>
                         <td><span class="role-tag role-${currentRole}">${roleRu}</span></td>
                         <td>
-                            <select onchange="changeUserRole('${key}', this.value)" style="padding: 0.2rem; font-size: 0.75rem;">
+                            <select onchange="changeUserRole(${safeKeyArg}, this.value)" style="padding: 0.2rem; font-size: 0.75rem;">
                                 <option value="guest" ${currentRole === 'guest' ? 'selected' : ''}>Гость</option>
                                 <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Член Коллегии</option>
                                 <option value="professor" ${currentRole === 'professor' ? 'selected' : ''}>Профессор</option>
@@ -2748,18 +2753,28 @@
                 newPerms[chk.getAttribute('data-category')] = chk.checked;
             });
 
-            await fetch(`${WORKER_URL}/api/users/permissions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: dbKey, permissions: newPerms })
-            });
+            try {
+                const response = await fetch(`${WORKER_URL}/api/users/permissions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: dbKey, permissions: newPerms })
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
 
-            if (allUsersData[dbKey]) {
-                allUsersData[dbKey].permissions = newPerms;
+                if (allUsersData[dbKey]) {
+                    allUsersData[dbKey].permissions = newPerms;
+                }
+
+                closeUserPermModal();
+                showToast('✨ Персональные доступы гостя обновлены!');
+                await fetchAdminData();
+            } catch (error) {
+                console.error('Не удалось сохранить доступы пользователя:', error);
+                showToast(`❌ Не удалось сохранить доступы: ${error.message}`);
             }
-
-            closeUserPermModal();
-            showToast('✨ Персональные доступы гостя обновлены!');
         }
 
         function renderDeletedUsersTable() {
@@ -2772,38 +2787,73 @@
             keys.forEach(key => {
                 const u = allDeletedUsersData[key];
                 const roleRu = ROLE_TRANSLATE[u.role] || u.role;
+                const safeKeyArg = inlineJsArg(key);
+                const safeName = String(u.name || '').replace(/[&<>"]/g, ch => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+                })[ch]);
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${u.name}</strong></td>
+                        <td><strong>${safeName}</strong></td>
                         <td><span class="role-tag role-${u.role}">${roleRu}</span></td>
-                        <td><button class="btn-restore" onclick="restoreUser('${key}')">♻️ Восстановить</button></td>
+                        <td><button class="btn-restore" onclick="restoreUser(${safeKeyArg})">♻️ Восстановить</button></td>
                     </tr>
                 `;
             });
         }
 
         async function changeUserRole(dbKey, newRole) {
-            await fetch(`${WORKER_URL}/api/users/role`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: dbKey, role: newRole })
-            });
-            fetchAdminData();
-            showToast('✨ Роль обновлена!');
+            try {
+                const response = await fetch(`${WORKER_URL}/api/users/role`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: dbKey, role: newRole })
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+                await fetchAdminData();
+                showToast('✨ Роль обновлена!');
+            } catch (error) {
+                console.error('Не удалось изменить роль пользователя:', error);
+                showToast(`❌ Не удалось изменить роль: ${error.message}`);
+                await fetchAdminData();
+            }
         }
 
         async function deleteUser(dbKey) {
-            if (confirm('Удалить пользователя?')) {
-                await fetch(`${WORKER_URL}/api/users/${dbKey}`, { method: 'DELETE' });
-                fetchAdminData();
+            if (!confirm('Удалить пользователя?')) return;
+            try {
+                const response = await fetch(`${WORKER_URL}/api/users/${encodeURIComponent(dbKey)}`, {
+                    method: 'DELETE'
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+                await fetchAdminData();
                 showToast('🗑️ Пользователь удален.');
+            } catch (error) {
+                console.error('Не удалось удалить пользователя:', error);
+                showToast(`❌ Не удалось удалить пользователя: ${error.message}`);
             }
         }
 
         async function restoreUser(dbKey) {
-            await fetch(`${WORKER_URL}/api/users/restore/${dbKey}`, { method: 'POST' });
-            fetchAdminData();
-            showToast('✨ Пользователь восстановлен!');
+            try {
+                const response = await fetch(`${WORKER_URL}/api/users/restore/${encodeURIComponent(dbKey)}`, {
+                    method: 'POST'
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+                await fetchAdminData();
+                showToast('✨ Пользователь восстановлен!');
+            } catch (error) {
+                console.error('Не удалось восстановить пользователя:', error);
+                showToast(`❌ Не удалось восстановить пользователя: ${error.message}`);
+            }
         }
 
         async function approveUser(dbKey, roleToAssign) {
