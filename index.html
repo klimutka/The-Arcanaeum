@@ -1443,14 +1443,15 @@
         <!-- REQUEST SECTION -->
         <section id="request-section" class="section-panel">
             <div class="skyrim-card">
-                <div class="section-header"><h2>✉️ Запрос на Выдачу Доступа</h2></div>
+                <div class="section-header"><h2 id="request-form-title">✉️ Запрос на Выдачу Доступа</h2></div>
                 <form id="access-request-form" onsubmit="handleRequestSubmit(event)">
                     <div class="form-grid">
-                        <div class="form-group"><label>Имя Персонажа *</label><input type="text" id="req-name" required></div>
-                        <div class="form-group"><label>Желаемый Пароль *</label><input type="password" id="req-password" required></div>
-                        <div class="form-group full-width"><label>Цель получения доступа *</label><textarea id="req-reason" rows="3" required></textarea></div>
+                        <div class="form-group" id="req-name-group"><label>Имя Персонажа *</label><input type="text" id="req-name" required></div>
+                        <div class="form-group" id="req-password-group"><label>Желаемый Пароль *</label><input type="password" id="req-password" required></div>
+                        <div class="form-group full-width" id="req-category-group" style="display:none;"><label>Запрашиваемый раздел</label><input type="text" id="req-category" readonly></div>
+                        <div class="form-group full-width"><label>Цель получения доступа *</label><textarea id="req-reason" rows="3" required placeholder="Опишите, зачем вам нужен доступ..."></textarea></div>
                     </div>
-                    <button type="submit" class="btn-gold" style="width: 100%;">Отправить Заявку</button>
+                    <button type="submit" class="btn-gold" style="width:100%;">Отправить заявку</button>
                 </form>
             </div>
         </section>
@@ -1550,6 +1551,10 @@
                         </div>
                     </div>
 
+                    <div id="permission-requests-container" style="margin-top:2rem;">
+                        <h3 style="font-family:var(--font-title);color:var(--text-gold);font-size:1rem;margin-bottom:.8rem;">🔐 Запросы прав на разделы</h3>
+                        <div class="table-responsive"><table class="requests-table"><thead><tr><th>Пользователь</th><th>Раздел</th><th>Цель запроса</th><th>Действия</th></tr></thead><tbody id="permission-requests-tbody"></tbody></table></div>
+                    </div>
                     <div id="manage-users-container" style="margin-top: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.8rem;">
                             <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1rem;">👥 Управление Доступами и Ролями</h3>
@@ -1722,6 +1727,8 @@
         let allUsersData = {};
         let allDeletedUsersData = {};
         let allRequestsData = {};
+        let allPermissionRequestsData = {};
+        let pendingPermissionCategory = "";
 
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
@@ -2078,6 +2085,7 @@
                 allUsersData = data.users || {};
                 allDeletedUsersData = data.deletedUsers || {};
                 allRequestsData = data.requests || {};
+                allPermissionRequestsData = data.permissionRequests || {};
                 globalGuestPermissions = data.guestPermissions || {};
 
                 // Проверяем актуальность сессии текущего администратора/профессора
@@ -2088,6 +2096,8 @@
                         return;
                     }
                     if (allUsersData[currentUser.key]) {
+                        currentUser.permissions = allUsersData[currentUser.key].permissions || {};
+                        safeSetItem('skyrim_user', JSON.stringify(currentUser));
                         const serverRole = allUsersData[currentUser.key].role || 'member';
                         if (serverRole !== currentUser.role) {
                             currentUser.role = serverRole;
@@ -2101,6 +2111,7 @@
                 renderGlobalGuestPermissionCheckboxes();
                 renderUsersTable();
                 renderRequestsTable();
+                renderPermissionRequestsTable();
                 renderDeletedUsersTable();
 
                 startAdminPolling();
@@ -2591,8 +2602,44 @@
             switchTab('home');
         }
 
+        function openPermissionRequest(category) {
+            if (currentUser) {
+                pendingPermissionCategory = String(category || '').trim();
+                document.getElementById('request-form-title').innerText = '🔐 Запрос прав на раздел';
+                document.getElementById('req-name-group').style.display = 'none';
+                document.getElementById('req-password-group').style.display = 'none';
+                document.getElementById('req-name').required = false;
+                document.getElementById('req-password').required = false;
+                document.getElementById('req-category-group').style.display = '';
+                document.getElementById('req-category').value = pendingPermissionCategory;
+                document.getElementById('req-reason').value = '';
+            } else {
+                pendingPermissionCategory = '';
+                document.getElementById('request-form-title').innerText = '✉️ Запрос на Выдачу Доступа';
+                document.getElementById('req-name-group').style.display = '';
+                document.getElementById('req-password-group').style.display = '';
+                document.getElementById('req-category-group').style.display = 'none';
+                document.getElementById('req-name').required = true;
+                document.getElementById('req-password').required = true;
+            }
+            switchTab('request');
+        }
+
         async function handleRequestSubmit(e) {
             e.preventDefault();
+            if (currentUser) {
+                if (!pendingPermissionCategory) { showToast('❌ Не выбран раздел.'); return; }
+                try {
+                    const response = await fetch(`${WORKER_URL}/api/permission-requests`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userKey:currentUser.key, name:currentUser.name, category:pendingPermissionCategory, reason:document.getElementById('req-reason').value.trim()}) });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                    document.getElementById('access-request-form').reset();
+                    pendingPermissionCategory = '';
+                    showToast('📜 Запрос прав отправлен.');
+                    switchTab('catalog');
+                } catch (error) { showToast(`❌ Не удалось отправить запрос: ${error.message}`); }
+                return;
+            }
             const charName = document.getElementById('req-name').value.trim();
             const password = document.getElementById('req-password').value.trim();
             const dbKey = charName.toLowerCase().replace(/\s+/g, '_');
@@ -2612,6 +2659,25 @@
             document.getElementById('access-request-form').reset();
             showToast('📜 Заявка отправлена!');
             switchTab('home');
+        }
+
+        function renderPermissionRequestsTable() {
+            const tbody = document.getElementById('permission-requests-tbody');
+            if (!tbody) return;
+            if (!currentUser || !['keeper','professor'].includes(currentUser.role)) { tbody.innerHTML = '<tr><td colspan="4">Доступно профессорам и смотрителям</td></tr>'; return; }
+            const rows = Object.entries(allPermissionRequestsData || {}).filter(([,r]) => r.status === 'pending');
+            if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Нет новых запросов прав</td></tr>'; return; }
+            const esc = v => String(v || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            tbody.innerHTML = rows.map(([id,r]) => `<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${esc(r.reason)}</td><td><button class="btn-small btn-approve" onclick="reviewPermissionRequest(decodeURIComponent('${encodeURIComponent(id)}'),true)">Одобрить</button> <button class="btn-small btn-reject" onclick="reviewPermissionRequest(decodeURIComponent('${encodeURIComponent(id)}'),false)">Отклонить</button></td></tr>`).join('');
+        }
+        async function reviewPermissionRequest(id, approve) {
+            try {
+                const response = await fetch(`${WORKER_URL}/api/permission-requests/${approve?'approve':'reject'}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reviewerKey:currentUser && currentUser.key})});
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                await fetchAdminData();
+                showToast(approve ? '✅ Доступ выдан.' : 'Заявка отклонена.');
+            } catch(error) { showToast(`❌ ${error.message}`); }
         }
 
         function renderRequestsTable() {
@@ -2976,7 +3042,7 @@
                         <div class="magic-school-access-eyebrow">ЗАКРЫТЫЙ РАЗДЕЛ КОЛЛЕГИИ</div>
                         <h3>Доступ к знаниям ограничен</h3>
                         <p>Для доступа к этому разделу обратитесь к Архимагу или его заместителю.</p>
-                        <button type="button" class="btn-gold magic-school-access-request" onclick="switchTab('request')">Запросить доступ</button>
+                        <button type="button" class="btn-gold magic-school-access-request" onclick="openPermissionRequest('${categoryVal}')">Запросить доступ</button>
                     </div>`;
                 if (paginationBox) paginationBox.innerHTML = '';
                 return;
