@@ -2751,7 +2751,7 @@
 
         async function saveUserGuestPermissions() {
             const dbKey = document.getElementById('user-perm-target-key').value;
-            let newPerms = {};
+            const newPerms = {};
             document.querySelectorAll('.ind-user-perm-check').forEach(chk => {
                 newPerms[chk.getAttribute('data-category')] = chk.checked;
             });
@@ -2770,10 +2770,14 @@
                 if (allUsersData[dbKey]) {
                     allUsersData[dbKey].permissions = newPerms;
                 }
+                if (currentUser && currentUser.key === dbKey) {
+                    currentUser.permissions = newPerms;
+                    safeSetItem('skyrim_user', JSON.stringify(currentUser));
+                }
 
                 closeUserPermModal();
                 showToast('✨ Персональные доступы гостя обновлены!');
-                await fetchAdminData();
+                renderCatalog();
             } catch (error) {
                 console.error('Не удалось сохранить доступы пользователя:', error);
                 showToast(`❌ Не удалось сохранить доступы: ${error.message}`);
@@ -2956,8 +2960,12 @@
             const userRole = currentUser ? (currentUser.role || 'member') : 'guest';
             const userPerms = (currentUser && currentUser.permissions) ? currentUser.permissions : {};
 
-            // Магические школы и «Базовая магия» доступны только авторизованным членам Коллегии и выше.
-            if (isMagicSchoolCategory(categoryVal) && isGuestOrAnonymous()) {
+            // Гостям разрешены магические школы, если администратор выдал персональный
+            // или общий доступ к выбранной категории. Без такого разрешения раздел закрыт.
+            const hasGuestCategoryAccess = !!(
+                userPerms[categoryVal] || globalGuestPermissions[categoryVal]
+            );
+            if (isMagicSchoolCategory(categoryVal) && isGuestOrAnonymous() && !hasGuestCategoryAccess) {
                 container.className = 'magic-school-access-container';
                 if (countInfo) countInfo.innerText = 'Доступ к разделу ограничен';
                 container.innerHTML = `
