@@ -1573,7 +1573,10 @@
                     <div id="deleted-users-container" style="margin-top: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.8rem;">
                             <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1rem;">🗑️ Удаленные Пользователи</h3>
-                            <input type="text" id="deleted-user-search-input" placeholder="🔍 Поиск..." oninput="renderDeletedUsersTable()" style="max-width: 200px; padding: 0.4rem; font-size: 0.8rem;">
+                            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                                <input type="text" id="deleted-user-search-input" placeholder="🔍 Поиск..." oninput="renderDeletedUsersTable()" style="max-width: 200px; padding: 0.4rem; font-size: 0.8rem;">
+                                <button type="button" class="btn-user-delete" id="clear-deleted-users-btn" onclick="clearDeletedUsers()" style="padding:0.45rem 0.7rem;">🧹 Очистить список</button>
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="requests-table">
@@ -2782,6 +2785,8 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             const keys = Object.keys(allDeletedUsersData);
+            const clearButton = document.getElementById('clear-deleted-users-btn');
+            if (clearButton) clearButton.disabled = keys.length === 0;
             if (keys.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Нет удаленных пользователей</td></tr>';
             
             keys.forEach(key => {
@@ -2853,6 +2858,45 @@
             } catch (error) {
                 console.error('Не удалось восстановить пользователя:', error);
                 showToast(`❌ Не удалось восстановить пользователя: ${error.message}`);
+            }
+        }
+
+
+        async function clearDeletedUsers() {
+            const count = Object.keys(allDeletedUsersData || {}).length;
+            if (count === 0) {
+                showToast('Архив уже пуст.');
+                return;
+            }
+
+            const confirmation = prompt(
+                `Будут безвозвратно удалены ${count} записей из архива. Активные пользователи, заявки и книги не затрагиваются.\n\nДля подтверждения введи: ОЧИСТИТЬ АРХИВ`
+            );
+            if (confirmation !== 'ОЧИСТИТЬ АРХИВ') {
+                if (confirmation !== null) showToast('Очистка отменена: фраза не совпала.');
+                return;
+            }
+
+            const button = document.getElementById('clear-deleted-users-btn');
+            if (button) button.disabled = true;
+
+            try {
+                const response = await fetch(`${WORKER_URL}/api/admin/deleted-users/clear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirmation: 'ОЧИСТИТЬ АРХИВ' })
+                });
+                const responseText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText || response.statusText}`);
+                }
+
+                await fetchAdminData();
+                showToast('🧹 Архив удалённых пользователей очищен.');
+            } catch (error) {
+                console.error('Не удалось очистить архив:', error);
+                showToast(`❌ Не удалось очистить архив: ${error.message}`);
+                if (button) button.disabled = false;
             }
         }
 
