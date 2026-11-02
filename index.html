@@ -1733,6 +1733,7 @@
         let userSortField = 'role'; 
         let userSortDirection = 'asc'; 
         let adminPollInterval = null;
+        let guestPermissionPollInterval = null;
 
         // Новые настройки каталога
         let catalogViewMode = safeGetItem('arcanaeum_view_mode') || 'grid'; // 'grid' или 'list'
@@ -1807,10 +1808,13 @@
             return true;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Проверяем 2-часовой тайм-аут при старте
             if (!checkSessionTimeout()) return;
 
+            // Синхронизируем права гостя с базой до первой отрисовки каталога.
+            if (currentUser) await refreshCurrentUserFromServer();
+            if (currentUser && currentUser.role === 'guest') startGuestPermissionPolling();
             updateUIAuthState();
             fetchBooks();
             fetchServices();
@@ -2367,6 +2371,68 @@
             return ['Разрушение', 'Зачарование', 'Иллюзия', 'Восстановление', 'Алхимия', 'Изменение', 'Колдовство', 'Базовый уровень'].includes(value);
         }
 
+        // Единая проверка доступа гостя к категории. Используется и каталогом, и читалкой.
+        function guestHasCategoryAccess(category) {
+            if (!isGuestOrAnonymous()) return true;
+            const userPermissions = currentUser && currentUser.permissions && typeof currentUser.permissions === 'object'
+                ? currentUser.permissions : {};
+            const sharedPermissions = globalGuestPermissions && typeof globalGuestPermissions === 'object'
+                ? globalGuestPermissions : {};
+            return !!(userPermissions[category] || sharedPermissions[category]);
+        }
+
+        // Права могли быть одобрены уже после входа гостя. Обновляем их из D1,
+        // чтобы не полагаться на устаревшую копию пользователя в localStorage.
+        async function refreshCurrentUserFromServer() {
+            if (!currentUser || !currentUser.key) return true;
+            try {
+                const response = await fetch(`${WORKER_URL}/api/users/check?key=${encodeURIComponent(currentUser.key)}`);
+                if (response.status === 404) {
+                    userLogout();
+                    showToast('❌ Аккаунт не найден или удалён. Войдите снова.');
+                    return false;
+                }
+                if (!response.ok) return true; // При временной сетевой ошибке оставляем локальную сессию.
+                const serverUser = await response.json();
+                currentUser = {
+                    ...currentUser,
+                    name: serverUser.name || currentUser.name,
+                    role: serverUser.role || currentUser.role || 'guest',
+                    permissions: serverUser.permissions && typeof serverUser.permissions === 'object'
+                        ? serverUser.permissions : {}
+                };
+                safeSetItem('skyrim_user', JSON.stringify(currentUser));
+                return true;
+            } catch (error) {
+                console.warn('Не удалось обновить права пользователя:', error);
+                return true;
+            }
+        }
+
+        // Пока гость находится на сайте, периодически проверяем новые одобрения.
+        function startGuestPermissionPolling() {
+            if (guestPermissionPollInterval) return;
+            guestPermissionPollInterval = setInterval(async () => {
+                if (!currentUser || currentUser.role !== 'guest') {
+                    clearInterval(guestPermissionPollInterval);
+                    guestPermissionPollInterval = null;
+                    return;
+                }
+                const previousPermissions = JSON.stringify(currentUser.permissions || {});
+                const sessionIsValid = await refreshCurrentUserFromServer();
+                if (!sessionIsValid) {
+                    if (guestPermissionPollInterval) clearInterval(guestPermissionPollInterval);
+                    guestPermissionPollInterval = null;
+                    return;
+                }
+                const currentPermissions = JSON.stringify(currentUser.permissions || {});
+                if (previousPermissions !== currentPermissions) {
+                    renderCatalog();
+                    showToast('✨ Ваши права доступа обновлены.');
+                }
+            }, 15000);
+        }
+
         function setCatalogQuickFilter(mode) {
             const category = document.getElementById('category-filter');
             const selectedSchool = category && isMagicSchoolCategory(category.value) ? category.value : null;
@@ -2582,6 +2648,7 @@
                 };
                 safeSetItem('skyrim_user', JSON.stringify(currentUser));
                 updateUIAuthState();
+                if (currentUser.role === 'guest') startGuestPermissionPolling();
                 if (currentUser.role === 'keeper' || currentUser.role === 'professor') fetchAdminData();
                 showToast(`✨ Добро пожаловать, ${userData.name}!`);
                 switchTab('catalog');
@@ -2592,6 +2659,10 @@
 
         function userLogout() {
             currentUser = null;
+            if (guestPermissionPollInterval) {
+                clearInterval(guestPermissionPollInterval);
+                guestPermissionPollInterval = null;
+            }
             safeRemoveItem('skyrim_user');
             if (adminPollInterval) {
                 clearInterval(adminPollInterval);
@@ -3028,9 +3099,7 @@
 
             // Гостям разрешены магические школы, если администратор выдал персональный
             // или общий доступ к выбранной категории. Без такого разрешения раздел закрыт.
-            const hasGuestCategoryAccess = !!(
-                userPerms[categoryVal] || globalGuestPermissions[categoryVal]
-            );
+            const hasGuestCategoryAccess = guestHasCategoryAccess(categoryVal);
             if (isMagicSchoolCategory(categoryVal) && isGuestOrAnonymous() && !hasGuestCategoryAccess) {
                 container.className = 'magic-school-access-container';
                 if (countInfo) countInfo.innerText = 'Доступ к разделу ограничен';
@@ -3054,9 +3123,10 @@
                 const authorMatch = b.author ? b.author.toLowerCase().includes(searchVal) : false;
                 
                 if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') return false;
-                if ((b.category === 'Доклады' || b.category === 'Базовый уровень') && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member') return false;
+                const guestHasBookAccess = userRole === 'guest' && guestHasCategoryAccess(b.category);
+                if ((b.category === 'Доклады' || b.category === 'Базовый уровень') && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member' && !guestHasBookAccess) return false;
 
-                if (userRole === 'guest' && !userPerms[b.category] && !globalGuestPermissions[b.category]) return false;
+                if (userRole === 'guest' && !guestHasBookAccess) return false;
                 if (catalogAdvancedOnly && !b.isAdvanced) return false;
 
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
@@ -3309,9 +3379,16 @@
         }
 
         async function openViewer(id) {
+            // После одобрения заявки права могли измениться на сервере, пока гость оставался в системе.
+            if (currentUser && currentUser.role === 'guest') {
+                const sessionIsValid = await refreshCurrentUserFromServer();
+                if (!sessionIsValid) return;
+                renderCatalog();
+            }
+
             const listingBook = books.find(book => String(book.id) === String(id));
-            if (listingBook && isMagicSchoolCategory(listingBook.category) && isGuestOrAnonymous()) {
-                showToast('Для доступа к этому разделу обратитесь к Архимагу или его заместителю.');
+            if (listingBook && isGuestOrAnonymous() && !guestHasCategoryAccess(listingBook.category)) {
+                showToast('Для чтения этой книги у вашей учётной записи нет доступа к разделу.');
                 return;
             }
             const wrapper = document.getElementById('viewer-pages-wrapper');
@@ -3320,7 +3397,15 @@
 
             try {
                 const res = await fetch(`${WORKER_URL}/api/books/${id}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const book = await res.json();
+                // Проверяем фактическую категорию загруженной книги, а не только карточку каталога.
+                if (isGuestOrAnonymous() && !guestHasCategoryAccess(book.category)) {
+                    document.getElementById('viewer-modal').classList.remove('active');
+                    wrapper.innerHTML = '';
+                    showToast('Для чтения этой книги у вашей учётной записи нет доступа к разделу.');
+                    return;
+                }
                 document.getElementById('modal-book-title').innerText = book.title;
                 wrapper.innerHTML = '';
                 
