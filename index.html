@@ -1303,8 +1303,8 @@
 
                 <!-- Жанры TES — отдельная компактная сетка с пояснением каждого жанра. -->
                 <div id="tes-genre-tiles-box" class="archive-subtile-panel archive-genre-panel" style="display:none;" aria-label="Жанры книг из TES">
-                    <div class="archive-subtile-heading"><span>Жанры книг из TES</span><i></i><small>УТОЧНИТЕ ПОИСК</small></div>
-                    <div class="archive-subtile-grid archive-genre-grid" role="group" aria-label="Жанр книги из TES">
+                    <div class="archive-subtile-heading"><span id="public-genre-heading">Жанры книг из TES</span><i></i><small>УТОЧНИТЕ ПОИСК</small></div>
+                    <div id="public-genre-tiles" class="archive-subtile-grid archive-genre-grid" role="group" aria-label="Жанр книги из TES">
                         <button type="button" class="archive-subtile genre-subtile" data-tes-genre-tile="all" aria-pressed="true" onclick="setCatalogTesGenreFilter('all')">
                             <span class="archive-subtile-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M32 16 36 28 48 32 36 36 32 48 28 36 16 32 28 28Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="32" cy="32" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span>
                             <span class="archive-subtile-copy"><strong>Все жанры</strong><small>Показывать книги из TES без ограничения по жанру.</small></span><span class="archive-subtile-arrow" aria-hidden="true">↗</span>
@@ -1391,7 +1391,7 @@
                         <option value="players">Книги игроков</option>
                     </select>
                     <select id="tes-genre-filter" onchange="onTesGenreFilterChange()">
-                        <option value="all">Все жанры TES</option>
+                        <option value="all">Все жанры</option>
                         <option value="history">История</option>
                         <option value="myths">Мифы / Легенды / Предания</option>
                         <option value="fiction">Художественная литература / Романы</option>
@@ -1542,13 +1542,13 @@
                                     </select>
                                 </div>
                                 <div class="form-group" id="add-book-tes-genre-box" style="display: none;">
-                                    <label>Жанр книги TES *</label>
+                                    <label id="book-genre-label">Жанр книги TES *</label>
                                     <select id="book-tes-genre">
                                         <option value="history">История</option>
                                         <option value="myths">Мифы / Легенды / Предания</option>
                                         <option value="fiction">Художественная литература / Романы</option>
                                         <option value="science">Наука / Магия / Ремесло</option>
-                                        <option value="anachronisms">Анахронизмы</option>
+                                        <option id="book-tes-genre-anachronisms" value="anachronisms">Анахронизмы</option>
                                     </select>
                                 </div>
                                 <div class="form-group full-width">
@@ -1692,13 +1692,13 @@
                         </select>
                     </div>
                     <div class="form-group" id="edit-book-tes-genre-box" style="display: none;">
-                        <label>Жанр книги TES *</label>
+                        <label id="edit-book-genre-label">Жанр книги TES *</label>
                         <select id="edit-book-tes-genre">
                             <option value="history">История</option>
                             <option value="myths">Мифы / Легенды / Предания</option>
                             <option value="fiction">Художественная литература / Романы</option>
                             <option value="science">Наука / Магия / Ремесло</option>
-                            <option value="anachronisms">Анахронизмы</option>
+                            <option id="edit-book-tes-genre-anachronisms" value="anachronisms">Анахронизмы</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Описание</label><textarea id="edit-book-desc" rows="3"></textarea></div>
@@ -2566,6 +2566,8 @@
         function setCatalogTesGenreFilter(value) {
             const tesGenreFilter = document.getElementById('tes-genre-filter');
             if (!tesGenreFilter) return;
+            const source = document.getElementById('public-subfilter')?.value;
+            if (source === 'players' && value === 'anachronisms') value = 'all';
             tesGenreFilter.value = value;
             updateTesGenreTileStates();
             currentPage = 1;
@@ -2580,6 +2582,9 @@
         }
 
         function onTesGenreFilterChange() {
+            const source = document.getElementById('public-subfilter')?.value;
+            const genreFilter = document.getElementById('tes-genre-filter');
+            if (source === 'players' && genreFilter?.value === 'anachronisms') genreFilter.value = 'all';
             updateTesGenreTileStates();
             resetPageAndRender();
         }
@@ -2603,13 +2608,34 @@
         }
 
         function updateTesGenreFilterVisibility() {
-            const categoryVal = document.getElementById('category-filter').value;
-            const publicSubfilter = document.getElementById('public-subfilter').value;
-            const tesGenreFilterBox = document.getElementById('tes-genre-tiles-box');
-            if (categoryVal === 'Общественные писания' && publicSubfilter === 'tes') {
-                if (tesGenreFilterBox) tesGenreFilterBox.style.display = 'block';
-            } else {
-                if (tesGenreFilterBox) tesGenreFilterBox.style.display = 'none';
+            const categoryVal = document.getElementById('category-filter')?.value;
+            const publicSubfilter = document.getElementById('public-subfilter')?.value;
+            const genreBox = document.getElementById('tes-genre-tiles-box');
+            const showGenres = categoryVal === 'Общественные писания' &&
+                (publicSubfilter === 'tes' || publicSubfilter === 'players');
+            const isPlayers = publicSubfilter === 'players';
+            const genreFilter = document.getElementById('tes-genre-filter');
+
+            if (genreBox) {
+                genreBox.style.display = showGenres ? 'block' : 'none';
+                genreBox.setAttribute('aria-label', isPlayers ? 'Жанры книг игроков' : 'Жанры книг из TES');
+                const heading = document.getElementById('public-genre-heading');
+                if (heading) heading.textContent = isPlayers ? 'Жанры книг игроков' : 'Жанры книг из TES';
+                const tiles = document.getElementById('public-genre-tiles');
+                if (tiles) tiles.setAttribute('aria-label', isPlayers ? 'Жанр книги игрока' : 'Жанр книги из TES');
+                const allDescription = genreBox.querySelector('[data-tes-genre-tile="all"] .archive-subtile-copy small');
+                if (allDescription) allDescription.textContent = isPlayers
+                    ? 'Показывать книги игроков без ограничения по жанру.'
+                    : 'Показывать книги из TES без ограничения по жанру.';
+                const anachronismsTile = genreBox.querySelector('[data-tes-genre-tile="anachronisms"]');
+                if (anachronismsTile) anachronismsTile.style.display = isPlayers ? 'none' : '';
+            }
+
+            // Анахронизмы доступны только книгам TES. При переключении на книги игроков
+            // сбрасываем ранее выбранный несовместимый фильтр.
+            if (isPlayers && genreFilter && genreFilter.value === 'anachronisms') {
+                genreFilter.value = 'all';
+                updateTesGenreTileStates();
             }
         }
 
@@ -3157,8 +3183,8 @@
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
                 if (categoryMatch && categoryVal === 'Общественные писания' && publicSubfilter !== 'all') {
                     if (b.publicTag !== publicSubfilter) return false;
-                    if (publicSubfilter === 'tes' && tesGenreFilter !== 'all') {
-                        if (b.tesGenre !== tesGenreFilter) return false;
+                    if ((publicSubfilter === 'tes' || publicSubfilter === 'players') && tesGenreFilter !== 'all') {
+                        if ((b.tesGenre || '') !== tesGenreFilter) return false;
                     }
                 }
                 return (titleMatch || authorMatch) && categoryMatch;
@@ -3204,7 +3230,8 @@
                     let subTagHtml = '';
                     if (book.category === 'Общественные писания') {
                         if (book.publicTag === 'players') {
-                            subTagHtml = '<span class="sub-tag">✍️ Игроки</span>';
+                            const playerGenreLabel = TES_GENRE_NAMES[book.tesGenre] || 'Жанр не указан';
+                            subTagHtml = `<span class="sub-tag">✍️ Игроки · ${playerGenreLabel}</span>`;
                         } else {
                             let genreLabel = TES_GENRE_NAMES[book.tesGenre] || '📜 TES';
                             subTagHtml = `<span class="sub-tag">${genreLabel}</span>`;
@@ -3249,7 +3276,9 @@
                         ${paginatedBooks.map(book => {
                             let subTag = '';
                             if (book.category === 'Общественные писания') {
-                                subTag = book.publicTag === 'players' ? ' [Игроки]' : ` [${TES_GENRE_NAMES[book.tesGenre] || 'TES'}]`;
+                                subTag = book.publicTag === 'players'
+                                    ? ` [Игроки · ${TES_GENRE_NAMES[book.tesGenre] || 'Жанр не указан'}]`
+                                    : ` [${TES_GENRE_NAMES[book.tesGenre] || 'TES'}]`;
                             }
                             
                             let adminActions = isKeeper ? `
@@ -3327,12 +3356,16 @@
         function toggleAddBookTesGenreVisibility() {
             const cat = document.getElementById('book-category').value;
             const pubTag = document.getElementById('book-public-tag').value;
-            const tesGenreBox = document.getElementById('add-book-tes-genre-box');
-            if (cat === 'Общественные писания' && pubTag === 'tes') {
-                tesGenreBox.style.display = 'flex';
-            } else {
-                tesGenreBox.style.display = 'none';
-            }
+            const genreBox = document.getElementById('add-book-tes-genre-box');
+            const genreSelect = document.getElementById('book-tes-genre');
+            const isPlayerBook = pubTag === 'players';
+            const showGenre = cat === 'Общественные писания' && (pubTag === 'tes' || isPlayerBook);
+            if (genreBox) genreBox.style.display = showGenre ? 'flex' : 'none';
+            const label = document.getElementById('book-genre-label');
+            if (label) label.textContent = isPlayerBook ? 'Жанр книги игрока *' : 'Жанр книги TES *';
+            const anachronisms = document.getElementById('book-tes-genre-anachronisms');
+            if (anachronisms) { anachronisms.disabled = isPlayerBook; anachronisms.hidden = isPlayerBook; }
+            if (isPlayerBook && genreSelect?.value === 'anachronisms') genreSelect.value = 'history';
         }
 
         function toggleEditBookSubtype() {
@@ -3345,12 +3378,16 @@
         function toggleEditBookTesGenreVisibility() {
             const cat = document.getElementById('edit-book-category').value;
             const pubTag = document.getElementById('edit-book-public-tag').value;
-            const tesGenreBox = document.getElementById('edit-book-tes-genre-box');
-            if (cat === 'Общественные писания' && pubTag === 'tes') {
-                tesGenreBox.style.display = 'flex';
-            } else {
-                tesGenreBox.style.display = 'none';
-            }
+            const genreBox = document.getElementById('edit-book-tes-genre-box');
+            const genreSelect = document.getElementById('edit-book-tes-genre');
+            const isPlayerBook = pubTag === 'players';
+            const showGenre = cat === 'Общественные писания' && (pubTag === 'tes' || isPlayerBook);
+            if (genreBox) genreBox.style.display = showGenre ? 'flex' : 'none';
+            const label = document.getElementById('edit-book-genre-label');
+            if (label) label.textContent = isPlayerBook ? 'Жанр книги игрока *' : 'Жанр книги TES *';
+            const anachronisms = document.getElementById('edit-book-tes-genre-anachronisms');
+            if (anachronisms) { anachronisms.disabled = isPlayerBook; anachronisms.hidden = isPlayerBook; }
+            if (isPlayerBook && genreSelect?.value === 'anachronisms') genreSelect.value = 'history';
         }
 
         async function handleSaveBookEdit(e) {
@@ -3368,7 +3405,7 @@
                     author: document.getElementById('edit-book-author').value.trim(),
                     category: document.getElementById('edit-book-category').value,
                     publicTag: document.getElementById('edit-book-public-tag').value,
-                    tesGenre: (document.getElementById('edit-book-category').value === 'Общественные писания' && document.getElementById('edit-book-public-tag').value === 'tes') ? document.getElementById('edit-book-tes-genre').value : '',
+                    tesGenre: (document.getElementById('edit-book-category').value === 'Общественные писания' && ['tes', 'players'].includes(document.getElementById('edit-book-public-tag').value)) ? document.getElementById('edit-book-tes-genre').value : '',
                     description: document.getElementById('edit-book-desc').value.trim(),
                     isAdvanced: document.getElementById('edit-book-is-advanced').checked,
                     pages: []
@@ -3478,7 +3515,7 @@
 
             const categoryVal = document.getElementById('book-category').value;
             const publicTagVal = document.getElementById('book-public-tag').value;
-            const tesGenreVal = (categoryVal === 'Общественные писания' && publicTagVal === 'tes') ? document.getElementById('book-tes-genre').value : '';
+            const tesGenreVal = (categoryVal === 'Общественные писания' && ['tes', 'players'].includes(publicTagVal)) ? document.getElementById('book-tes-genre').value : '';
 
             await fetch(`${WORKER_URL}/api/books`, {
                 method: 'POST',
