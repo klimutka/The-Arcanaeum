@@ -3682,6 +3682,10 @@ function switchTab(tabName, options = {}) {
         const pages = await Promise.all(pagePromises);
 
         const newBook = {
+            // Уникальный ID обязателен для сохранения книги в Cloudflare D1.
+            id: (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+                ? crypto.randomUUID()
+                : `book-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
             title,
             author,
             category,
