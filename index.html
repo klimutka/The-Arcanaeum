@@ -3626,6 +3626,77 @@ function switchTab(tabName, options = {}) {
         window.addEventListener('hashchange', () => {
             applyRouteFromHash();
         });
+		async function handleAddBook(e) {
+    e.preventDefault();
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Загрузка фолианта...';
+
+    try {
+        const title = document.getElementById('book-title').value.trim();
+        const author = document.getElementById('book-author').value.trim();
+        const category = document.getElementById('book-category').value;
+        const publicTag = document.getElementById('book-public-tag').value;
+        const tesGenreSelect = document.getElementById('book-tes-genre');
+        const description = document.getElementById('book-desc').value.trim();
+        const isAdvanced = document.getElementById('book-is-advanced').checked;
+        
+        const tesGenre = (category === 'Общественные писания' && ['tes', 'players'].includes(publicTag)) 
+            ? tesGenreSelect.value 
+            : '';
+
+        const fileInput = document.getElementById('book-file');
+        const files = fileInput.files;
+        if (!files || files.length === 0) {
+            throw new Error('Выберите хотя бы одну страницу книги.');
+        }
+
+        // Конвертируем все выбранные изображения страниц в Base64
+        const pagePromises = Array.from(files).map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        });
+
+        const pages = await Promise.all(pagePromises);
+
+        const newBook = {
+            title,
+            author,
+            category,
+            publicTag,
+            tesGenre,
+            description,
+            isAdvanced,
+            pages
+        };
+
+        const res = await fetch(`${WORKER_URL}/api/books`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newBook)
+        });
+
+        if (!res.ok) throw new Error('Ошибка сервера при добавлении книги');
+
+        showToast('✨ Труд успешно добавлен в архив!');
+        document.getElementById('add-book-form').reset();
+        toggleAddBookSubtype();
+        
+        if (typeof fetchBooks === 'function') {
+            fetchBooks();
+        }
+    } catch (err) {
+        console.error("Ошибка при добавлении книги:", err);
+        showToast('❌ ' + (err.message || 'Не удалось добавить книгу'));
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Добавить в Архив';
+    }
+}
     </script>
 </body>
 </html>
