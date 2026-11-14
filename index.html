@@ -1738,6 +1738,20 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        function getCategoryDisplayName(categoryKey) {
+        const categoryNames = {
+        'destruction': 'Разрушение',
+        'restoration': 'Восстановление',
+        'alteration': 'Изменение',
+        'conjuration': 'Колдовство',
+        'illusion': 'Иллюзия',
+        'mysticism': 'Мистицизм',
+        'thaumaturgy': 'Тауматургия',
+        'public': 'Общественные писания',
+        // Добавьте сюда другие категории, если они у вас используются
+    };
+    return categoryNames[categoryKey] || categoryKey;
+}
         // Безопасно вставляет ID книги в inline-обработчик HTML.
         // JSON.stringify экранирует кавычки и переводы строк; HTML-сущности
         // не дают кавычкам завершить атрибут onclick.
