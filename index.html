@@ -3680,7 +3680,22 @@ function switchTab(tabName, options = {}) {
             body: JSON.stringify(newBook)
         });
 
-        if (!res.ok) throw new Error('Ошибка сервера при добавлении книги');
+        const responseText = await res.text();
+
+if (!res.ok) {
+    let details = responseText;
+
+    try {
+        const data = JSON.parse(responseText);
+        details = data.error || data.message || responseText;
+    } catch (e) {}
+
+    console.error('Ошибка API:', res.status, details);
+
+    throw new Error(
+        `HTTP ${res.status}: ${String(details).slice(0, 500)}`
+    );
+}
 
         showToast('✨ Труд успешно добавлен в архив!');
         document.getElementById('add-book-form').reset();
