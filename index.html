@@ -10,6 +10,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=MedievalSharp&family=Marcellus&display=swap" rel="stylesheet">
 
     <script>
+	let toastTimer;
+
+	function showToast(message, duration = 4000) {
+    const toast = document.getElementById('toast');
+
+    if (!toast) {
+        console.warn(message);
+        return;
+    }
+
+    toast.textContent = String(message);
+    toast.style.display = 'block';
+
+		clearTimeout(toastTimer);
+		toastTimer = setTimeout(() => {
+        toast.style.display = 'none';
+    }, duration);
+}
         const WORKER_URL = "https://arcanaeum-api.klimutka.workers.dev";
 
         // Безопасный доступ к хранилищу: браузеры могут запрещать localStorage
