@@ -1646,6 +1646,7 @@
                     <button class="zoom-btn" onclick="changeZoom(0.25)">+</button>
                     <button class="zoom-btn" onclick="resetZoom()" title="Сбросить масштаб">🔄</button>
                     <button class="zoom-btn" id="fullscreen-btn" onclick="toggleFullscreen()" title="На весь экран">⛶</button>
+                    <button class="zoom-btn" onclick="copyCurrentLink()" title="Скопировать ссылку на эту книгу">🔗</button>
                 </div>
                 <button onclick="closeViewer()" style="background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer;">&times;</button>
             </div>
@@ -1748,6 +1749,10 @@
         }
 
         let books = [];
+        let currentActiveTab = 'home';
+        let currentOpenBookId = null;
+        let isApplyingRoute = false;
+        const ROUTE_TABS = ['home', 'catalog', 'services', 'college', 'login', 'request'];
         let currentUser = JSON.parse(safeGetItem('skyrim_user')) || null;
         let allUsersData = {};
         let allDeletedUsersData = {};
@@ -1834,6 +1839,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            
             // Проверяем 2-часовой тайм-аут при старте
             if (!checkSessionTimeout()) return;
 
@@ -1841,7 +1847,12 @@
             if (currentUser) await refreshCurrentUserFromServer();
             if (currentUser && currentUser.role === 'guest') startGuestPermissionPolling();
             updateUIAuthState();
-            fetchBooks();
+
+            // Применяем вкладку из URL сразу, а список книг ждём перед открытием книги по прямой ссылке
+            const initialRoute = parseRouteHash();
+            switchTab(initialRoute.tab, { updateHash: !window.location.hash, replaceHash: true });
+
+            await fetchBooks();
             fetchServices();
             toggleAddBookSubtype();
             updateViewToggleButtons();
@@ -1852,6 +1863,10 @@
 
             if (currentUser && (currentUser.role === 'keeper' || currentUser.role === 'professor')) {
                 fetchAdminData();
+            }
+
+            if (initialRoute.bookId) {
+                await openViewer(initialRoute.bookId, { updateHash: false });
             }
         });
 
@@ -2348,9 +2363,15 @@
             }
         }
 
-        function switchTab(tabName) {
+function switchTab(tabName, options = {}) {
+            const { updateHash = true, replaceHash = false } = options;
             // При переключении вкладок проверяем, не истекли ли 2 часа
             if (!checkSessionTimeout()) return;
+
+            // Если открыта книга и пользователь уходит на другую вкладку — закрываем читалку
+            if (updateHash && document.getElementById('viewer-modal').classList.contains('active')) {
+                closeViewer({ updateHash: false });
+            }
 
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.section-panel').forEach(sec => sec.classList.remove('active'));
@@ -2375,17 +2396,11 @@
                 document.getElementById('nav-login-btn').classList.add('active');
                 document.getElementById('login-section').classList.add('active');
             }
-        }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3500);
-        }
-
-        // Display alias for the existing backend category key. Keeping the stored value avoids breaking older books.
-        function getCategoryDisplayName(category) {
-            return category === 'Базовый уровень' ? 'Базовая магия' : category;
+            currentActiveTab = tabName;
+            if (updateHash && !isApplyingRoute) {
+                updateLocationHash(buildRouteHash(tabName), replaceHash);
+            }
         }
 
         function isGuestOrAnonymous() {
@@ -3244,12 +3259,15 @@
                             <div style="font-size: 0.78rem; color: var(--accent-arcane); margin-bottom: 0.2rem;">
                                 ${getCategoryDisplayName(book.category)} ${subTagHtml}
                             </div>
-                            <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1rem;">${book.title}</h3>
+                            <h3 style="font-family: var(--font-title); color: var(--text-gold); font-size: 1rem;"><a href="#catalog/${encodeURIComponent(book.id)}" style="color: inherit; text-decoration: none;">${book.title}</a></h3>
                             ${book.author ? `<div style="font-size: 0.78rem; color: var(--text-gold); font-style: italic;">Автор: ${book.author}</div>` : '<div style="font-size: 0.78rem; color: var(--text-muted); font-style: italic;">Автор: неизвестен</div>'}
                         </div>
                         <div>
                             <p style="font-size:0.82rem; color: var(--text-muted); margin: 0.5rem 0 0.8rem; line-height: 1.4;">${book.description || ''}</p>
-                            <button class="btn-gold" style="width:100%; padding:0.55rem; font-size:0.78rem;" onclick="openViewer(${inlineJsArg(book.id)})">📖 Читать</button>
+                            <div style="display:flex; gap:0.4rem;">
+                                <button class="btn-gold" style="flex:1; padding:0.55rem; font-size:0.78rem;" onclick="openViewer(${inlineJsArg(book.id)})">📖 Читать</button>
+                                <button class="btn-gold" style="padding:0.55rem 0.7rem; font-size:0.78rem;" title="Скопировать ссылку на эту книгу" onclick="copyBookLink(${inlineJsArg(book.id)}, event)">🔗</button>
+                            </div>
                             ${adminBtnsHtml}
                         </div>
                     `;
@@ -3297,6 +3315,7 @@
                                     <td style="font-size: 0.78rem; color: var(--text-muted);">${getCategoryDisplayName(book.category)}${subTag}</td>
                                     <td style="text-align: right; white-space: nowrap;">
                                         <button class="btn-gold" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; margin-right: 0.2rem;" onclick="openViewer(${inlineJsArg(book.id)})">📖 Читать</button>
+                                        <button class="btn-gold" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; margin-right: 0.2rem;" title="Скопировать ссылку на эту книгу" onclick="copyBookLink(${inlineJsArg(book.id)}, event)">🔗</button>
                                         ${adminActions}
                                     </td>
                                 </tr>
@@ -3440,7 +3459,46 @@
             }
         }
 
-        async function openViewer(id) {
+        // ====== Ссылки: у каждой вкладки и каждой книги свой адрес ======
+        //   #home, #catalog, #services, #college, #login, #request  — вкладки
+        //   #catalog/<id книги>                                       — конкретная книга
+
+        function parseRouteHash() {
+            const raw = (window.location.hash || '').replace(/^#\/?/, '');
+            const slash = raw.indexOf('/');
+            const tabPart = slash === -1 ? raw : raw.slice(0, slash);
+            const bookPart = slash === -1 ? '' : raw.slice(slash + 1);
+
+            let bookId = null;
+            if (bookPart) {
+                try { bookId = decodeURIComponent(bookPart); } catch (e) { bookId = bookPart; }
+            }
+
+            let tab = ROUTE_TABS.includes(tabPart) ? tabPart : 'home';
+            if (bookId) tab = 'catalog';
+            return { tab, bookId };
+        }
+
+        function buildRouteHash(tab, bookId) {
+            if (bookId) return '#catalog/' + encodeURIComponent(bookId);
+            return '#' + (ROUTE_TABS.includes(tab) ? tab : 'home');
+        }
+
+        function updateLocationHash(hash, replace = false) {
+            if (window.location.hash === hash) return;
+            try {
+                const url = window.location.pathname + window.location.search + hash;
+                if (replace) history.replaceState(null, '', url);
+                else history.pushState(null, '', url);
+            } catch (e) {
+                // pushState бывает запрещён (встроенный предпросмотр и т.п.) — пробуем напрямую
+                try { window.location.hash = hash; } catch (e2) { /* адрес недоступен */ }
+            }
+        }
+
+        async function openViewer(id, options = {}) {
+            const { updateHash = true } = options;
+
             // После одобрения заявки права могли измениться на сервере, пока гость оставался в системе.
             if (currentUser && currentUser.role === 'guest') {
                 const sessionIsValid = await refreshCurrentUserFromServer();
@@ -3451,26 +3509,35 @@
             const listingBook = books.find(book => String(book.id) === String(id));
             if (listingBook && isGuestOrAnonymous() && !guestHasCategoryAccess(listingBook.category)) {
                 showToast('Для чтения этой книги у вашей учётной записи нет доступа к разделу.');
+                updateLocationHash(buildRouteHash(currentActiveTab), true);
                 return;
             }
+
+            currentOpenBookId = String(id);
+            if (updateHash && !isApplyingRoute) {
+                updateLocationHash(buildRouteHash('catalog', id));
+            }
+
             const wrapper = document.getElementById('viewer-pages-wrapper');
             wrapper.innerHTML = `<div style="color: var(--text-gold); margin-top: 3rem; text-align: center;">⏳ Раскрываем фолиант...</div>`;
             document.getElementById('viewer-modal').classList.add('active');
 
             try {
-                const res = await fetch(`${WORKER_URL}/api/books/${id}`);
+                const res = await fetch(`${WORKER_URL}/api/books/${encodeURIComponent(id)}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const book = await res.json();
                 // Проверяем фактическую категорию загруженной книги, а не только карточку каталога.
                 if (isGuestOrAnonymous() && !guestHasCategoryAccess(book.category)) {
                     document.getElementById('viewer-modal').classList.remove('active');
                     wrapper.innerHTML = '';
+                    currentOpenBookId = null;
                     showToast('Для чтения этой книги у вашей учётной записи нет доступа к разделу.');
+                    updateLocationHash(buildRouteHash(currentActiveTab), true);
                     return;
                 }
                 document.getElementById('modal-book-title').innerText = book.title;
                 wrapper.innerHTML = '';
-                
+
                 (book.pages || []).forEach((imgSrc, i) => {
                     const img = document.createElement('img');
                     img.src = imgSrc;
@@ -3483,63 +3550,68 @@
             }
         }
 
-        function closeViewer() {
+        function closeViewer(options = {}) {
+            const { updateHash = true } = options;
             const container = document.getElementById('viewer-container-box');
             const btn = document.getElementById('fullscreen-btn');
-            
+
             container.classList.remove('fullscreen');
             if (btn) {
                 btn.innerText = '⛶';
                 btn.title = 'На весь экран';
             }
-            
+
             document.getElementById('viewer-modal').classList.remove('active');
-        }
+            currentOpenBookId = null;
 
-        async function handleAddBook(e) {
-            e.preventDefault();
-            const fileInput = document.getElementById('book-file');
-            const files = fileInput.files;
-            if (files.length === 0) return;
-
-            const uploadBtn = document.getElementById('upload-btn');
-            uploadBtn.disabled = true;
-
-            let compressedImages = [];
-            for (let i = 0; i < files.length; i++) {
-                uploadBtn.innerText = `⏳ Оптимизация (${i + 1}/${files.length})...`;
-                compressedImages.push(await compressImage(files[i]));
+            if (updateHash && !isApplyingRoute) {
+                updateLocationHash(buildRouteHash(currentActiveTab));
             }
-
-            uploadBtn.innerText = '⏳ Запись в Cloudflare D1...';
-
-            const categoryVal = document.getElementById('book-category').value;
-            const publicTagVal = document.getElementById('book-public-tag').value;
-            const tesGenreVal = (categoryVal === 'Общественные писания' && ['tes', 'players'].includes(publicTagVal)) ? document.getElementById('book-tes-genre').value : '';
-
-            await fetch(`${WORKER_URL}/api/books`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: 'book-' + Date.now(),
-                    title: document.getElementById('book-title').value.trim(),
-                    author: document.getElementById('book-author').value.trim(),
-                    category: categoryVal,
-                    publicTag: publicTagVal,
-                    tesGenre: tesGenreVal,
-                    description: document.getElementById('book-desc').value.trim(),
-                    isAdvanced: document.getElementById('book-is-advanced').checked,
-                    pages: compressedImages
-                })
-            });
-
-            document.getElementById('add-book-form').reset();
-            toggleAddBookSubtype();
-            uploadBtn.innerText = 'Добавить в Архив';
-            uploadBtn.disabled = false;
-            showToast('📚 Книга сохранена в Cloudflare!');
-            fetchBooks();
         }
+
+        function copyTextWithToast(url) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url)
+                    .then(() => showToast('🔗 Ссылка скопирована в буфер обмена!'))
+                    .catch(() => showToast('🔗 Ссылка: ' + url));
+            } else {
+                showToast('🔗 Ссылка: ' + url);
+            }
+        }
+
+        // Ссылка на текущую страницу (если открыта книга — на неё)
+        function copyCurrentLink() {
+            copyTextWithToast(window.location.href);
+        }
+
+        // Ссылка на конкретную книгу прямо из каталога
+        function copyBookLink(id, event) {
+            if (event) event.stopPropagation();
+            copyTextWithToast(window.location.href.split('#')[0] + buildRouteHash('catalog', id));
+        }
+
+        async function applyRouteFromHash() {
+            isApplyingRoute = true;
+            try {
+                const { tab, bookId } = parseRouteHash();
+                const viewerOpen = document.getElementById('viewer-modal').classList.contains('active');
+
+                if (bookId && viewerOpen && currentOpenBookId === String(bookId)) return; // уже открыта
+                switchTab(tab, { updateHash: false });
+                if (bookId) {
+                    await openViewer(bookId, { updateHash: false });
+                } else if (viewerOpen) {
+                    closeViewer({ updateHash: false });
+                }
+            } finally {
+                isApplyingRoute = false;
+            }
+        }
+
+        // Кнопки «назад/вперёд» и ручная правка адреса
+        window.addEventListener('hashchange', () => {
+            applyRouteFromHash();
+        });
     </script>
 </body>
 </html>
