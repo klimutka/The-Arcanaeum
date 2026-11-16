@@ -2453,6 +2453,14 @@ function switchTab(tabName, options = {}) {
             return !!(userPermissions[category] || sharedPermissions[category]);
         }
 
+        // «Доклады» доступны всем участникам Коллегии и выше.
+        // Гости и анонимные посетители сохраняют прежнюю систему разрешений.
+        function hasReportsCategoryAccess() {
+            const role = currentUser ? (currentUser.role || 'member') : 'guest';
+            if (['member', 'professor', 'keeper'].includes(role)) return true;
+            return guestHasCategoryAccess('Доклады');
+        }
+
         // Права могли быть одобрены уже после входа гостя. Обновляем их из D1,
         // чтобы не полагаться на устаревшую копию пользователя в localStorage.
         async function refreshCurrentUserFromServer() {
@@ -3222,9 +3230,10 @@ function switchTab(tabName, options = {}) {
                 
                 if (b.category === 'Исследования' && userRole !== 'keeper' && userRole !== 'professor') return false;
                 const guestHasBookAccess = userRole === 'guest' && guestHasCategoryAccess(b.category);
-                if ((b.category === 'Доклады' || b.category === 'Базовый уровень') && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member' && !guestHasBookAccess) return false;
+                if (b.category === 'Доклады' && !hasReportsCategoryAccess()) return false;
+                if (b.category === 'Базовый уровень' && userRole !== 'keeper' && userRole !== 'professor' && userRole !== 'member' && !guestHasBookAccess) return false;
 
-                if (userRole === 'guest' && !guestHasBookAccess) return false;
+                if (userRole === 'guest' && !guestHasBookAccess && b.category !== 'Доклады') return false;
                 if (catalogAdvancedOnly && !b.isAdvanced) return false;
 
                 let categoryMatch = (categoryVal === 'all' || b.category === categoryVal);
@@ -3539,7 +3548,12 @@ function switchTab(tabName, options = {}) {
             }
 
             const listingBook = books.find(book => String(book.id) === String(id));
-            if (listingBook && isGuestOrAnonymous() && !guestHasCategoryAccess(listingBook.category)) {
+            if (listingBook && listingBook.category === 'Доклады' && !hasReportsCategoryAccess()) {
+                showToast('Для просмотра раздела «Доклады» необходим статус члена Коллегии или выше.');
+                updateLocationHash(buildRouteHash(currentActiveTab), true);
+                return;
+            }
+            if (listingBook && isGuestOrAnonymous() && listingBook.category !== 'Доклады' && !guestHasCategoryAccess(listingBook.category)) {
                 showToast('Для чтения этой книги у вашей учётной записи нет доступа к разделу.');
                 updateLocationHash(buildRouteHash(currentActiveTab), true);
                 return;
@@ -3559,7 +3573,15 @@ function switchTab(tabName, options = {}) {
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const book = await res.json();
                 // Проверяем фактическую категорию загруженной книги, а не только карточку каталога.
-                if (isGuestOrAnonymous() && !guestHasCategoryAccess(book.category)) {
+                if (book.category === 'Доклады' && !hasReportsCategoryAccess()) {
+                    document.getElementById('viewer-modal').classList.remove('active');
+                    wrapper.innerHTML = '';
+                    currentOpenBookId = null;
+                    showToast('Для просмотра раздела «Доклады» необходим статус члена Коллегии или выше.');
+                    updateLocationHash(buildRouteHash(currentActiveTab), true);
+                    return;
+                }
+                if (isGuestOrAnonymous() && book.category !== 'Доклады' && !guestHasCategoryAccess(book.category)) {
                     document.getElementById('viewer-modal').classList.remove('active');
                     wrapper.innerHTML = '';
                     currentOpenBookId = null;
